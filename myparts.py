@@ -78,6 +78,13 @@ class MyParts(object):
         dlg.createPeer(wnd, None)
         self.init_rows(dlg)
         self.init_buttons(dlg)
+        sel = self.get_selection()
+        if sel:
+            cell = sel.getCellByPosition(0, 0)
+            if cell.getString():
+                for i in range(0, PART_ATTR_LEN):
+                    cell = sel.getCellByPosition(i, 0)
+                    self.cc[i].setText(cell.getString())
         return dlg
 
     def init_row(self, dlg, posy, label, itemlist):
@@ -213,6 +220,8 @@ class MyParts(object):
         cell = sel.getCellByPosition(0, r)
         if not cell.getString():
             return True
+        if 1 not in checks:
+            return False
         for i in range(0, PART_ATTR_LEN):
             cell = sel.getCellByPosition(i, r)
             if cell.getString() != part[i] and checks[i]:

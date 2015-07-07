@@ -9,7 +9,13 @@ FILES=myparts.py \
 VER=$(shell date +%F)
 OXT=myparts-$(VER).oxt
 
-oxt:
+.PHONY: update_version commit
+
+update_version:
+	cat description.xml | sed "s:  <version value=[^^]* />:  <version value=\"$(shell date +%F)\" />:" > desc.xml
+	mv desc.xml description.xml
+
+oxt: update_version
 	rm -f *.oxt
 	zip -r $(OXT) $(FILES)
 
