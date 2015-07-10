@@ -12,7 +12,7 @@ from com.sun.star.table import CellRangeAddress
 PART_ATTR_LIST = ['Device', 'Value', 'Footprint', 'Quantity', 'Note1', 'Note2']
 PART_ATTR_LEN = len(PART_ATTR_LIST)
 PART_ATTR_ITEMS = [
-    ('RESISTOR', 'CAPACITOR', 'INDUCTOR', 'DIODE', 'LED'),
+    ('RESISTOR', 'CAPACITOR', 'INDUCTOR', 'CONNECTOR', 'LED'),
     ('1p', '1n', '1u', '1m', '1', '1k', '1M'),
     ('0402', '0603', '0805', '1206'),
     ('1', '2', '3', '4', '5'),
