@@ -67,7 +67,7 @@ class MyParts(object):
         ctx = self.ctx
         smgr = ctx.ServiceManager
         model = smgr.createInstanceWithContext('com.sun.star.awt.UnoControlDialogModel', ctx)
-        model.Width = 100
+        model.Width = 120
         model.Height = 150
         model.Title = 'My Parts'
         self.center(model)
@@ -78,21 +78,16 @@ class MyParts(object):
         dlg.createPeer(wnd, None)
         self.init_rows(dlg)
         self.init_buttons(dlg)
-        sel = self.get_selection()
-        if sel:
-            cell = sel.getCellByPosition(0, 0)
-            if cell.getString():
-                for i in range(0, PART_ATTR_LEN):
-                    cell = sel.getCellByPosition(i, 0)
-                    self.cc[i].setText(cell.getString())
+        self.init_data(dlg)
+
         return dlg
 
     def init_row(self, dlg, posy, label, itemlist):
         model = dlg.getModel()
         text = model.createInstance('com.sun.star.awt.UnoControlCheckBoxModel')
         text.Name = label + 'L'
-        text.Width = model.Width/2
-        text.PositionX = model.Width/4 - text.Width/2
+        text.Width = model.Width/3
+        text.PositionX = 0#model.Width/4 - text.Width/2
         text.PositionY = posy + 5
         text.Height = 10
         text.Label = label
@@ -102,8 +97,8 @@ class MyParts(object):
         self.ll.append(dlg.getControl(text.Name))
         combo = model.createInstance('com.sun.star.awt.UnoControlComboBoxModel')
         combo.Name = label + 'W'
-        combo.Width = model.Width/2
-        combo.PositionX = 3*model.Width/4 - combo.Width/2
+        combo.Width = 2*model.Width/3
+        combo.PositionX = 2*model.Width/3 - combo.Width/2
         combo.PositionY = posy
         combo.Height = 15
         combo.Enabled = 1
@@ -118,16 +113,15 @@ class MyParts(object):
         model = dlg.getModel()
         for i in range(0, PART_ATTR_LEN):
             label = PART_ATTR_LIST[i]
-            items = PART_ATTR_ITEMS[i]
-            #devices = ['RESISTOR', 'CAPACITOR', 'INDUCTOR', 'DIODE', 'LED']
+            #items = PART_ATTR_ITEMS[i]
+            items = self.get_combo_itemlist(i)
             l,w = self.init_row(dlg, i*model.Height/(PART_ATTR_LEN + 1), label, items)
+            l.setState(1)
             w.Text = PART_ATTR_DFLT[i]
             listener = LabelListener(self.part_dlg_label_upd)
             l.addMouseListener(listener)
             listener = ComboboxListener(self.part_dlg_combo_upd)
             w.addTextListener(listener)
-        devw = self.cc[0]
-        self.part_dlg_combo_upd(devw)
 
     def init_button(self, dlg, posx, label):
         model = dlg.getModel()
@@ -154,6 +148,45 @@ class MyParts(object):
         listener = ButtonListener(lambda: self.part_del())
         btn.addActionListener(listener)
         return dlg
+
+    def init_data(self, dlg):
+        doc = self.desktop.getCurrentComponent()
+        ctrlr = doc.CurrentController
+        sel = ctrlr.getSelection()
+        if not sel:
+            return
+        area = sel.getRangeAddress()
+        sht = ctrlr.ActiveSheet
+        cellrange = sht.getCellRangeByPosition(0, area.StartRow, PART_ATTR_LEN - 1, area.StartRow)
+        cell = cellrange.getCellByPosition(0, 0)
+        if cell.getString():
+            ctrlr.select(cellrange)
+            sel = self.get_selection()
+            for i in range(0, PART_ATTR_LEN):
+                cell = sel.getCellByPosition(i, 0)
+                self.cc[i].setText(cell.getString())
+
+    def get_combo_itemlist(self, index):
+        itemlist = PART_ATTR_ITEMS[index]
+        if index >= PART_ATTR_N:
+            return itemlist
+        ii = set()
+        for i in itemlist:
+            ii.add(i)
+        doc = self.desktop.getCurrentComponent()
+        ctrlr = doc.CurrentController
+        sht = ctrlr.ActiveSheet
+        r = 0
+        while True:
+            cell = sht.getCellByPosition(index, r)
+            s = cell.getString()
+            if s:
+                ii.add(s)
+            else:
+                break
+            r = r + 1
+        itemlist = tuple(sorted(list(ii)))
+        return itemlist
 
     def part_dlg_label_upd(self, evt):
         if evt.Buttons == RIGHT:
@@ -228,7 +261,7 @@ class MyParts(object):
                 return False
         return True
 
-    def part_find(self, find_next=True):
+    def part_find(self):
         part = [a.Text for a in self.cc]
         doc = self.desktop.getCurrentComponent()
         ctrlr = doc.CurrentController
@@ -237,21 +270,25 @@ class MyParts(object):
         area = sel.getRangeAddress()
         r = 0
         if self.part_cmp():
-            if find_next:
-                cell = sel.getCellByPosition(0, 0)
-                if cell.getString():
-                    r = area.StartRow + 1
-            else:
-                return sel
+            cell = sel.getCellByPosition(0, 0)
+            if cell.getString():
+                r = area.StartRow + 1
         while True:
             cell = sht.getCellByPosition(0, r)
             if cell.getString():
                 if not self.part_cmp(sel=sht, r=r):
                     r = r + 1
                     continue
-            cellrange = sht.getCellRangeByPosition(0, r, PART_ATTR_LEN - 1, r)
-            ctrlr.select(cellrange)
-            return cellrange
+            sel = sht.getCellRangeByPosition(0, r, PART_ATTR_LEN - 1, r)
+            ctrlr.select(sel)
+            break
+        checks = [l.getState() for l in self.ll]
+        cell = sht.getCellByPosition(0, r)
+        if cell.getString():
+            for i in range(0, PART_ATTR_LEN):
+                cell = sel.getCellByPosition(i, 0)
+                self.cc[i].Text = cell.getString()
+                self.ll[i].setState(checks[i])
 
     def part_add(self):
         if not self.ll[PART_ATTR_N].getState():
@@ -260,7 +297,7 @@ class MyParts(object):
         if self.part_cmp(checkn = 0):
             cellrange = self.get_selection()
         else:
-            cellrange = self.part_find(find_next=True)
+            cellrange = self.part_find()
         cell = cellrange.getCellByPosition(0, 0)
         if not cell.getString():
             for i in range(0, PART_ATTR_LEN):
