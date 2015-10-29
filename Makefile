@@ -1,4 +1,6 @@
-FILES=myparts.py \
+FILES=MP.py \
+	pythonpath/mp/__init__.py \
+	pythonpath/mp/myparts.py \
 	Addons.xcu \
 	description.xml \
 	Office/UI/CalcWindowState.xcu \
