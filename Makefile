@@ -1,13 +1,20 @@
 FILES=MP.py \
 	pythonpath/mp/__init__.py \
 	pythonpath/mp/myparts.py \
+	pythonpath/mp/mysort.py \
+	pythonpath/mp/mybom.py \
 	Addons.xcu \
 	description.xml \
 	Office/UI/CalcWindowState.xcu \
 	images/Logo.png \
 	images/part_16.bmp \
 	images/part_26.bmp \
-	META-INF/manifest.xml
+	images/sort_16.bmp \
+	images/sort_26.bmp \
+	images/bom_16.bmp \
+	images/bom_26.bmp \
+	META-INF/manifest.xml \
+	pkg-desc/pkg-description.txt
 VER=$(shell date +%F)
 OXT=myparts-$(VER).oxt
 

@@ -3,7 +3,7 @@
 xmlns:d="http://openoffice.org/extensions/description/2006"
 xmlns:xlink="http://www.w3.org/1999/xlink">
  
-  <version value="2015-10-29" />
+  <version value="2015-10-30" />
  
   <identifier value="org.openoffice.Office.addon.myparts" />
   <platform value="all" />
@@ -14,6 +14,10 @@ xmlns:xlink="http://www.w3.org/1999/xlink">
   <display-name>
     <name lang="en">MyParts</name>
   </display-name>
+
+  <extension-description>
+    <src xlink:href="pkg-desc/pkg-description.txt" lang="en" />
+  </extension-description>
  
   <icon>
     <default xlink:href="images/Logo.png" />

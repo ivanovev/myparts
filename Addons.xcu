@@ -12,7 +12,7 @@
                         <value>com.sun.star.sheet.SpreadsheetDocument</value>
                     </prop>
                     <prop oor:name="URL" oor:type="xs:string">
-                        <value>service:vnd.myparts?execute</value>
+                        <value>service:vnd.myparts?myparts</value>
                     </prop>
                     <prop oor:name="ImageIdentifier" oor:type="xs:string">
                         <value>%origin%/images/part</value>
@@ -24,12 +24,46 @@
                         <value>_self</value>
                     </prop>
                 </node>
+                <node oor:name="btn2" oor:op="replace">
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>service:vnd.mysort?mysort</value>
+                    </prop>
+                    <prop oor:name="ImageIdentifier" oor:type="xs:string">
+                        <value>%origin%/images/sort</value>
+                    </prop>
+                    <prop oor:name="Title" oor:type="xs:string">
+                        <value xml:lang="en">MySort</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                </node>
+                <node oor:name="btn3" oor:op="replace">
+                    <prop oor:name="Context" oor:type="xs:string">
+                        <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                    </prop>
+                    <prop oor:name="URL" oor:type="xs:string">
+                        <value>service:vnd.mybom?mybom</value>
+                    </prop>
+                    <prop oor:name="ImageIdentifier" oor:type="xs:string">
+                        <value>%origin%/images/bom</value>
+                    </prop>
+                    <prop oor:name="Title" oor:type="xs:string">
+                        <value xml:lang="en">MyBOM</value>
+                    </prop>
+                    <prop oor:name="Target" oor:type="xs:string">
+                        <value>_self</value>
+                    </prop>
+                </node>
             </node>
         </node>
         <node oor:name="Images">
             <node oor:name="image-myparts" oor:op="replace">
                 <prop oor:name="URL" oor:type="xs:string">
-                    <value>service:vnd.myparts?execute</value>
+                    <value>service:vnd.myparts?myparts</value>
                 </prop>
                 <node oor:name="UserDefinedImages">
                     <prop oor:name="ImageSmallURL">
@@ -40,6 +74,32 @@
                     </prop>
                 </node>
             </node>
+            <node oor:name="image-mysort" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>service:vnd.mysort?mysort</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL">
+                        <value>%origin%/images/sort_16.bmp</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL">
+                        <value>%origin%/images/sort_26.bmp</value>
+                    </prop>
+                </node>
+            </node>
+            <node oor:name="image-mybom" oor:op="replace">
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>service:vnd.mybom?mybom</value>
+                </prop>
+                <node oor:name="UserDefinedImages">
+                    <prop oor:name="ImageSmallURL">
+                        <value>%origin%/images/bom_16.bmp</value>
+                    </prop>
+                    <prop oor:name="ImageBigURL">
+                        <value>%origin%/images/bom_26.bmp</value>
+                    </prop>
+                </node>
+            </node>
         </node>
         <node oor:name="AddonMenu">
             <node oor:name="MyParts.AddonMenu.M1" oor:op="replace">
@@ -47,10 +107,38 @@
                     <value>com.sun.star.sheet.SpreadsheetDocument</value>
                 </prop>
                 <prop oor:name="URL" oor:type="xs:string">
-                    <value>service:vnd.myparts?execute</value>
+                    <value>service:vnd.myparts?myparts</value>
                 </prop>
                 <prop oor:name="Title" oor:type="xs:string">
                     <value>MyParts</value>
+                </prop>
+                <prop oor:name="Target" oor:type="xs:string">
+                    <value>_self</value>
+                </prop>
+            </node>
+            <node oor:name="MyParts.AddonMenu.M2" oor:op="replace">
+                <prop oor:name="Context" oor:type="xs:string">
+                    <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                </prop>
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>service:vnd.mysort?mysort</value>
+                </prop>
+                <prop oor:name="Title" oor:type="xs:string">
+                    <value>MySort</value>
+                </prop>
+                <prop oor:name="Target" oor:type="xs:string">
+                    <value>_self</value>
+                </prop>
+            </node>
+            <node oor:name="MyParts.AddonMenu.M3" oor:op="replace">
+                <prop oor:name="Context" oor:type="xs:string">
+                    <value>com.sun.star.sheet.SpreadsheetDocument</value>
+                </prop>
+                <prop oor:name="URL" oor:type="xs:string">
+                    <value>service:vnd.mybom?mybom</value>
+                </prop>
+                <prop oor:name="Title" oor:type="xs:string">
+                    <value>MyBOM</value>
                 </prop>
                 <prop oor:name="Target" oor:type="xs:string">
                     <value>_self</value>

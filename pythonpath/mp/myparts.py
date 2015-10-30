@@ -240,6 +240,37 @@ class MyParts(object):
             #self.msgbox('%d %d %d %d %d' % (area.StartRow, area.EndRow, area.StartColumn, area.EndColumn, len(args)))
         return sel
 
+    def get_part(self, sht, row):
+        if not sht:
+            doc = self.desktop.getCurrentComponent()
+            ctrlr = doc.CurrentController
+            sht = ctrlr.ActiveSheet
+        p = []
+        col = 0
+        while True:
+            cell = sht.getCellByPosition(col, row)
+            col = col + 1
+            s = cell.getString()
+            if s:
+                p.append(s)
+            elif len(p) and col <= PART_ATTR_LEN:
+                p.append('')
+            else:
+                break
+        return p
+
+    def set_part(self, sht, row, p, psz):
+        if not sht:
+            doc = self.desktop.getCurrentComponent()
+            ctrlr = doc.CurrentController
+            sht = ctrlr.ActiveSheet
+        for i in range(0, psz):
+            cell = sht.getCellByPosition(i, row)
+            if i < len(p):
+                cell.setString(p[i])
+            else:
+                cell.setString('')
+
     def part_cmp(self, sel=None, r=0, checkn=None):
         if not sel:
             sel = self.get_selection()
