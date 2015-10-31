@@ -16,7 +16,6 @@ class MySort(object):
         dlg.createPeer(wnd, None)
         self.init_buttons(dlg)
         self.init_rows(dlg)
-        #self.init_data(dlg)
 
         return dlg
 
@@ -40,8 +39,8 @@ class MySort(object):
         text.Align = 0
         text.Enabled = 1
         model.insertByName(text.Name, text)
-        self.ll.append(dlg.getControl(text.Name))
         l = dlg.getControl(text.Name)
+        self.ll.append(l)
         labels = ['A', 'B', 'C']
         cc = []
         for i in range(0, len(labels)):
