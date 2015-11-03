@@ -291,6 +291,24 @@ class MyParts(object):
                 return False
         return True
 
+    def part_cmp2(self, sht, index, part):
+        if ''.join(part) == '':
+            return False
+        part2 = self.get_part(sht, index)
+        if ''.join(part2) == '':
+            return False
+        l1 = len(part)
+        l2 = len(part2)
+        psz = l1 if l1 < l2 else l2
+        for i in range(0, psz):
+            if part[i] == '':
+                continue
+            if part2[i] == '':
+                continue
+            if part[i] != part2[i]:
+                return False
+        return True
+
     def part_find(self):
         part = [a.Text for a in self.cc]
         doc = self.desktop.getCurrentComponent()
@@ -319,6 +337,16 @@ class MyParts(object):
                 cell = sel.getCellByPosition(i, 0)
                 self.cc[i].Text = cell.getString()
                 self.ll[i].setState(checks[i])
+
+    def part_find2(self, sht, part, start=0):
+        index = start
+        while True:
+            part2 = self.get_part(sht, index)
+            if not part2:
+                return
+            if self.part_cmp2(sht, index, part):
+                return index
+            index += 1
 
     def part_add(self):
         if not self.ll[PART_ATTR_N].getState():
