@@ -1,4 +1,6 @@
 
+from collections import OrderedDict as OD
+
 class MyBOM(object):
     def init_dlg(self):
         ctx = self.ctx
@@ -40,10 +42,6 @@ class MyBOM(object):
         model.insertByName(text.Name, text)
         self.ll.append(dlg.getControl(text.Name))
         return text
-
-    def get_sheet_names(self):
-        doc = self.desktop.getCurrentComponent()
-        return [doc.Sheets.getByIndex(i).getName() for i in range(0, doc.Sheets.getCount())]
 
     def init_rows(self, dlg):
         model = dlg.getModel()
@@ -115,7 +113,6 @@ class MyBOM(object):
                     cell.clearContents(1023)
                     col += 1
             partn += 1
-        self.msgbox('%d' % partn)
         srcl = self.cc[-1]
         shts = srcl.SelectedItems
         if len(shts) == 0:
@@ -126,35 +123,44 @@ class MyBOM(object):
         while True:
             part = self.get_part(sht, partn)
             if not part:
-                partn += 1
-                continue
+                break
             if len(part) < 3:
-                partn += 1
-                continue
+                break
             part = part[0:3]
-            if ''.join(part) == '':
-                partn += 1
-                continue
             qty = 0
+            qtyd = OD()
             index = 0
             for shtn in shts:
-                sht = doc.Sheets.getByName(shtn)
-                self.msgbox(str(sht))
-                index = self.part_find2(sht, part, index)
-                if index == None:
+                sht1 = doc.Sheets.getByName(shtn)
+                index = self.part_find2(sht1, part, index)
+                part2 = self.get_part(sht1, index)
+                if not part2:
                     continue
-                part2 = self.get_part(sht, index)
-                qty += int(part2[mp.PART_ATTR_N])
+                qty1 = int(part2[mp.PART_ATTR_N])
+                qty += qty1
+                if sht1.Name not in qtyd:
+                    qtyd[sht1.Name] = qty1
+                else:
+                    qtyd[sht1.Name] += qty1
                 index += 1
-            self.msgbox(str(qty))
             cell = sht.getCellByPosition(mp.PART_ATTR_LEN, partn)
             part = self.get_part(sht, partn)
             if qty < int(part[mp.PART_ATTR_N]):
                 cell.setString('NO')
-                cell.CharColor = 0xFF0000
+                cell.CharColor = 0xAA0000
+                cell.CharWeight = 150
             else:
                 cell.setString('YES')
-                cell.CharColor = 0x00FF00
+                cell.CharColor = 0x00AA00
+                cell.CharWeight = 150
+            index = mp.PART_ATTR_LEN + 1
+            for k,v in qtyd.items():
+                cell = sht.getCellByPosition(index, partn)
+                cell.setString('%d' % v)
+                index += 1
+                cell = sht.getCellByPosition(index, partn)
+                cell.setString(k)
+                index += 1
             partn += 1
 
 def mybom(*args):
