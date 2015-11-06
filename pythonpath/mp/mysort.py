@@ -21,7 +21,7 @@ class MySort(object):
 
     def init_buttons(self, dlg):
         model = dlg.getModel()
-        btn = self.init_button(dlg, model.Width/3, 'Sort')
+        btn = self.init_button(dlg, model.Width/3, 1, 'Sort')
         listener = mp.ButtonListener(self.parts_sort_cb)
         btn.addActionListener(listener)
         return dlg

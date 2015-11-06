@@ -85,13 +85,15 @@ class MyBOM(object):
         names = self.get_sheet_names()
         while sht.Name in names:
             names.remove(sht.Name)
+        while 'Labels' in names:
+            names.remove('Labels')
         srcl.StringItemList = tuple(names)
         model.insertByName(srcl.Name, srcl)
         self.cc.append(dlg.getControl(srcl.Name))
 
     def init_buttons(self, dlg):
         model = dlg.getModel()
-        btn = self.init_button(dlg, model.Width/3, 'Check BOM')
+        btn = self.init_button(dlg, model.Width/3, 1, 'Check BOM')
         listener = mp.ButtonListener(self.check_bom_cb)
         btn.addActionListener(listener)
         return dlg
@@ -145,7 +147,8 @@ class MyBOM(object):
                 index += 1
             cell = sht.getCellByPosition(mp.PART_ATTR_LEN, partn)
             part = self.get_part(sht, partn)
-            if qty < int(part[mp.PART_ATTR_N]):
+            qtyn = int(self.cc[0].Text)*int(part[mp.PART_ATTR_N])
+            if qty < qtyn:
                 cell.setString('NO')
                 cell.CharColor = 0xAA0000
                 cell.CharWeight = 150

@@ -176,9 +176,9 @@ class MyParts(object):
         btn = self.init_button(dlg, 2*model.Width/3, 0, 'Del')
         listener = ButtonListener(lambda: self.part_del())
         btn.addActionListener(listener)
-        btn = self.init_button(dlg, model.Width/3, 1, 'Add label')
+        self.add_label_btn = self.init_button(dlg, model.Width/3, 1, 'Add label')
         listener = ButtonListener(lambda: self.add_label())
-        btn.addActionListener(listener)
+        self.add_label_btn.addActionListener(listener)
         return dlg
 
     def init_data(self, dlg):
@@ -413,11 +413,10 @@ class MyParts(object):
     def add_label(self):
         shtn = self.get_sheet_names()
         doc = self.desktop.getCurrentComponent()
-        self.init_label1()
-        labels = 'Labels'
-        if labels not in shtn:
-            doc.Sheets.insertNewByName(labels, len(shtn))
-        self.msgbox('Add label')
+        self.init_labels()
+        index = self.add_label1()
+        if type(index) == int:
+            self.add_label_btn.Label = 'Add label %d' % (index + 1)
 
     def cell_border(self, cell):
         border = cell.TopBorder
@@ -432,42 +431,84 @@ class MyParts(object):
         cell.VertJustify = VJ_CENTER
         return cell
 
-    def init_label1(self):
+    def init_labels(self):
         shtn = self.get_sheet_names()
         doc = self.desktop.getCurrentComponent()
-        label1 = 'Label1'
-        if label1 not in shtn:
-            doc.Sheets.insertNewByName(label1, len(shtn))
-        sht1 = doc.Sheets.getByName(label1)
+        labels = 'Labels'
+        if labels not in shtn:
+            doc.Sheets.insertNewByName(labels, len(shtn))
+        else:
+            return
+
+    def format_cell_text(self, i, col):
+        rc = self.cc[0].Text in ['RESISTOR', 'CAPACITOR']
+        if col == 0:
+            if i == 1 and not rc:
+                return 'Part #'
+            if i == 2:
+                return 'Package'
+            if i == 3:
+                return 'Qty'
+            return PART_ATTR_LIST[i]
+        if col == 1:
+            return self.cc[i].Text
+
+    def add_label1(self, index=None):
+        doc = self.desktop.getCurrentComponent()
+        sht1 = doc.Sheets.getByName('Labels')
+        for i in range(0, 21):
+            row = 6*int(i / 3)
+            col = 3*int(i % 3)
+            cell = sht1.getCellByPosition(col, row)
+            if not cell.getString():
+                index = i
+                break
+        if index == None:
+            return False
         #sht1.Rows.Height *= 2
-        sht1.Columns.getByIndex(0).Width *= 1.2
-        sht1.Columns.getByIndex(1).Width *= 1.5
+        k1 = 1
+        k2 = 1.5
+        if index == 0:
+            sht1.Columns.getByIndex(0).Width *= k1
+            sht1.Columns.getByIndex(1).Width *= k2
+        if index == 1:
+            sht1.Columns.getByIndex(2).Width /= 10
+            sht1.Columns.getByIndex(3).Width *= k1
+            sht1.Columns.getByIndex(4).Width *= k2
+        if index == 2:
+            sht1.Columns.getByIndex(5).Width /= 10
+            sht1.Columns.getByIndex(6).Width *= k1
+            sht1.Columns.getByIndex(7).Width *= k2
+        row = 6*int(index / 3)
+        col = 3*int(index % 3)
+        rr = False
+        #self.msgbox(str(index) + str(row) + str(col))
+        if sht1.Rows.getByIndex(row).Height == sht1.Rows.getByIndex(row + PART_ATTR_N + 1).Height:
+            rr = True
         for i in range(0, PART_ATTR_N+1):
-            sht1.Rows.getByIndex(i).Height *= 2
-            cell = sht1.getCellByPosition(0, i)
+            if col == 0 and rr:
+                sht1.Rows.getByIndex(row + i).Height *= 1.5
+                if i == 0 and row:
+                    sht1.Rows.getByIndex(row - 1).Height /= 2
+            cell = sht1.getCellByPosition(col, row + i)
             cell = self.cell_border(cell)
-            cell.setString(PART_ATTR_LIST[i])
-            cell = sht1.getCellByPosition(1, i)
+            cell.setString(self.format_cell_text(i, 0))
+            cell = sht1.getCellByPosition(col + 1, row + i)
             cell = self.cell_border(cell)
             cell.HoriJustify = HJ_CENTER
-            cell.setString(self.cc[i].Text)
-        cell = sht1.getCellByPosition(0, PART_ATTR_N+1)
+            cell.setString(self.format_cell_text(i, 1))
+        cell = sht1.getCellByPosition(col, row+PART_ATTR_N+1)
         cell = self.cell_border(cell)
-        cell = sht1.getCellByPosition(1, PART_ATTR_N+1)
+        cell.CharHeight = 8
+        if row or col:
+            cell.Formula = "=A5"
+        cell = sht1.getCellByPosition(col + 1, row+PART_ATTR_N+1)
         cell = self.cell_border(cell)
-
-    def AddBorder(self):
-        oDoc = XSCRIPTCONTEXT.getDocument()
-        oSheets = oDoc.getSheets()
-        oSheet =  oSheets.getByName('Label1')
-        oCell = oSheet.getCellByPosition(3,4)
-        Border = oCell.TopBorder
-        Border.OuterLineWidth = 100
-        Border.Color = 700
-        oCell.TopBorder = Border
-        oCell.BottomBorder = Border
-        oCell.LeftBorder = Border
-        oCell.RightBorder = Border
+        cell.CharHeight = 8
+        if row or col:
+            cell.Formula = "=B5"
+        cell.HoriJustify = HJ_CENTER
+        return index
 
     def msgbox(self, msg='message', title='Message', btntype=1):
         frame = self.desktop.getCurrentFrame()
