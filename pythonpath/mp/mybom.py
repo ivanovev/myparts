@@ -82,11 +82,7 @@ class MyBOM(object):
         #srcl.LineCount = 3
         srcl.MultiSelection = 1
         srcl.BackgroundColor = 0xFFFFFF
-        names = self.get_sheet_names()
-        while sht.Name in names:
-            names.remove(sht.Name)
-        while 'Labels' in names:
-            names.remove('Labels')
+        names = self.get_sheet_names(['Labels', sht.Name])
         srcl.StringItemList = tuple(names)
         model.insertByName(srcl.Name, srcl)
         self.cc.append(dlg.getControl(srcl.Name))

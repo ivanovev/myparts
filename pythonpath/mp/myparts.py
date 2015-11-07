@@ -5,7 +5,8 @@ from com.sun.star.awt.PushButtonType import STANDARD, OK, CANCEL
 from com.sun.star.sheet.CellDeleteMode import UP
 from com.sun.star.awt.PosSize import POSSIZE
 from com.sun.star.awt.MouseButton import RIGHT
-from com.sun.star.awt import XActionListener, XTextListener, XMouseListener
+from com.sun.star.awt import XActionListener, XTextListener, XMouseListener, Rectangle
+from com.sun.star.awt.PopupMenuDirection import EXECUTE_DEFAULT
 from com.sun.star.table import CellRangeAddress
 from com.sun.star.table.CellVertJustify import CENTER as VJ_CENTER
 from com.sun.star.table.CellHoriJustify import CENTER as HJ_CENTER
@@ -176,6 +177,9 @@ class MyParts(object):
         btn = self.init_button(dlg, 2*model.Width/3, 0, 'Del')
         listener = ButtonListener(lambda: self.part_del())
         btn.addActionListener(listener)
+        self.move_to_btn = self.init_button(dlg, 0, 1, 'Move to...')
+        listener = ButtonListener(self.part_move)
+        self.move_to_btn.addActionListener(listener)
         self.add_label_btn = self.init_button(dlg, model.Width/3, 1, 'Add label')
         listener = ButtonListener(lambda: self.add_label())
         self.add_label_btn.addActionListener(listener)
@@ -184,10 +188,21 @@ class MyParts(object):
     def init_data(self, dlg):
         doc = self.desktop.getCurrentComponent()
         ctrlr = doc.CurrentController
-        sel = self.get_selection()
-        if sel == None:
-            return
-        part = self.get_part(None, sel)
+        sht = self.get_active_sheet()
+        index = self.get_selection()
+        if index == None:
+            area = ctrlr.getSelection().getRangeAddress()
+            index = area.StartRow
+            cell = sht.getCellByPosition(0, index)
+            if index == 0:
+                self.set_selection(index)
+                if not self.get_part(sht, index):
+                    return
+            elif self.get_part(sht, index-1):
+                self.set_selection(index)
+                if not self.get_part(sht, index):
+                    return
+        part = self.get_part(sht, index)
         l = min(len(part), PART_ATTR_LEN)
         for i in range(0, l):
             self.cc[i].setText(part[i])
@@ -272,6 +287,13 @@ class MyParts(object):
             #self.msgbox('%d %d %d %d %d' % (area.StartRow, area.EndRow, area.StartColumn, area.EndColumn, len(args)))
         return area.StartRow
 
+    def set_selection(self, index):
+        doc = self.desktop.getCurrentComponent()
+        ctrlr = doc.CurrentController
+        sht = self.get_active_sheet()
+        sel = sht.getCellRangeByPosition(0, index, PART_ATTR_LEN - 1, index)
+        ctrlr.select(sel)
+
     def get_mypart(self):
         part1 = [a.Text for a in self.cc]
         checks = [l.getState() for l in self.ll]
@@ -298,9 +320,13 @@ class MyParts(object):
                 break
         return p
 
-    def get_sheet_names(self):
+    def get_sheet_names(self, skip=[]):
         doc = self.desktop.getCurrentComponent()
-        return [doc.Sheets.getByIndex(i).getName() for i in range(0, doc.Sheets.getCount())]
+        names = [doc.Sheets.getByIndex(i).getName() for i in range(0, doc.Sheets.getCount())]
+        for s in skip:
+            if s in names:
+                names.remove(s)
+        return names
 
     def set_part(self, sht, row, p, psz):
         if not sht:
@@ -345,8 +371,9 @@ class MyParts(object):
         index = self.part_find2(sht, part1, index)
         doc = self.desktop.getCurrentComponent()
         ctrlr = doc.CurrentController
-        sel = sht.getCellRangeByPosition(0, index, PART_ATTR_LEN - 1, index)
-        ctrlr.select(sel)
+        self.set_selection(index)
+        #sel = sht.getCellRangeByPosition(0, index, PART_ATTR_LEN - 1, index)
+        #ctrlr.select(sel)
         part = self.get_part(sht, index)
         if ''.join(part) == '':
             return
@@ -409,6 +436,21 @@ class MyParts(object):
             arange.EndColumn = area.EndColumn
             arange.EndRow = area.EndRow
             sht.removeRange(arange, UP)
+
+    def part_move(self):
+        sht = self.get_active_sheet()
+        shtn = self.get_sheet_names(['Labels', sht.Name])
+        if len(shtn) == 0:
+            return
+        menu = self.createUnoService('com.sun.star.awt.PopupMenu')
+        for i in range(0, len(shtn)):
+            menu.insertItem(i+1, shtn[i], 0, i)
+        rect = Rectangle()
+        btnpos = self.move_to_btn.PosSize
+        rect.X = btnpos.X + btnpos.Width/2
+        rect.Y = btnpos.Y + btnpos.Height/2
+        menu.execute(self.dlg.Peer, rect, EXECUTE_DEFAULT)
+        #self.msgbox('Part move')
 
     def add_label(self):
         shtn = self.get_sheet_names()
