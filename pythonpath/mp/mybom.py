@@ -27,7 +27,7 @@ class MyBOM(object):
             wdgtm.Name = label + 'W'
         wdgtm.Width = w
         wdgtm.PositionX = posx
-        wdgtm.PositionY = posy + 5
+        wdgtm.PositionY = posy
         wdgtm.Height = h
         if hasattr(wdgtm, 'Label'):
             wdgtm.Label = label
@@ -48,12 +48,12 @@ class MyBOM(object):
         posy = 0
         h1 = 15
         label = '# of boards'
-        self.create_text_label(dlg, label, posy)
+        self.create_text_label(dlg, label, posy + 5)
         spin = model.createInstance('com.sun.star.awt.UnoControlNumericFieldModel')
         spin = self.setup_attributes(spin, label, model.Width/2, posy, model.Width/2, h1)
         spin.Spin = 1
         spin.DecimalAccuracy = 0
-        spin.Value = 5
+        spin.Value = 1
         spin.ValueMin = 1
         spin.ValueMax = 100
         spin.ValueStep = 1
@@ -62,21 +62,19 @@ class MyBOM(object):
         self.cc.append(c)
         label = 'BOM'
         posy = model.Height/6
-        self.create_text_label(dlg, label, posy)
+        self.create_text_label(dlg, label, posy + 5)
         edit = model.createInstance('com.sun.star.awt.UnoControlEditModel')
         edit = self.setup_attributes(edit, label, model.Width/2, posy, model.Width/2, h1)
         edit.ReadOnly = 1
         model.insertByName(edit.Name, edit)
         self.cc.append(dlg.getControl(edit.Name))
-        doc = self.desktop.getCurrentComponent()
-        ctrlr = doc.CurrentController
-        sht = ctrlr.ActiveSheet
+        sht = self.get_active_sheet()
         edit.Text = sht.Name
         label = 'Search in'
         posy = model.Height/3
-        self.create_text_label(dlg, label, posy)
+        self.create_text_label(dlg, label, posy + 5)
         srcl = model.createInstance('com.sun.star.awt.UnoControlListBoxModel')
-        srcl = self.setup_attributes(srcl, label, model.Width/2, posy, model.Width/2, model.Height/2 - 5)
+        srcl = self.setup_attributes(srcl, label, model.Width/2, posy, model.Width/2, model.Height/2)
         srcl.Border = 1
         srcl.Dropdown = 0
         #srcl.LineCount = 3
@@ -89,16 +87,17 @@ class MyBOM(object):
 
     def init_buttons(self, dlg):
         model = dlg.getModel()
-        btn = self.init_button(dlg, model.Width/3, 1, 'Check BOM')
+        btn = self.init_button(dlg, model.Width/6, 1, 'Check BOM')
         listener = mp.ButtonListener(self.check_bom_cb)
+        btn.addActionListener(listener)
+        btn = self.init_button(dlg, model.Width/2, 1, 'Close')
+        listener = mp.ButtonListener(self.close_cb)
         btn.addActionListener(listener)
         return dlg
 
     def check_bom_cb(self):
         self.dlg.endExecute()
-        doc = self.desktop.getCurrentComponent()
-        ctrlr = doc.CurrentController
-        sht = ctrlr.ActiveSheet
+        sht = self.get_active_sheet()
         partn = 0
         while True:
             part = self.get_part(sht, partn)
@@ -129,8 +128,8 @@ class MyBOM(object):
             qtyd = OD()
             index = 0
             for shtn in shts:
-                sht1 = doc.Sheets.getByName(shtn)
-                index = self.part_find2(sht1, part, index)
+                sht1 = self.doc.Sheets.getByName(shtn)
+                index = self.part_find(sht1, part, index)
                 part2 = self.get_part(sht1, index)
                 if not part2:
                     continue

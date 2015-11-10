@@ -21,8 +21,11 @@ class MySort(object):
 
     def init_buttons(self, dlg):
         model = dlg.getModel()
-        btn = self.init_button(dlg, model.Width/3, 1, 'Sort')
+        btn = self.init_button(dlg, model.Width/6, 1, 'Sort')
         listener = mp.ButtonListener(self.parts_sort_cb)
+        btn.addActionListener(listener)
+        btn = self.init_button(dlg, model.Width/2, 1, 'Close')
+        listener = mp.ButtonListener(self.close_cb)
         btn.addActionListener(listener)
         return dlg
 
@@ -88,10 +91,19 @@ class MySort(object):
                     break
         return kk
 
+    def set_part(self, sht, row, p, psz):
+        if not sht:
+            sht = self.get_active_sheet()
+        for i in range(0, psz):
+            cell = sht.getCellByPosition(i, row)
+            if i < len(p):
+                cell.setString(p[i])
+            else:
+                cell.setString('')
+
     def parts_sort_cb(self):
-        doc = self.desktop.getCurrentComponent()
-        ctrlr = doc.CurrentController
-        sht = ctrlr.ActiveSheet
+        self.dlg.endExecute()
+        sht = self.get_active_sheet()
         pp = []
         row = 0
         while True:

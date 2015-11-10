@@ -1,15 +1,16 @@
 
-import uno, unohelper
 from com.sun.star.awt.MessageBoxType import MESSAGEBOX, INFOBOX, WARNINGBOX, ERRORBOX, QUERYBOX
 from com.sun.star.awt.PushButtonType import STANDARD, OK, CANCEL
-from com.sun.star.sheet.CellDeleteMode import UP
+from com.sun.star.awt import XActionListener, XTextListener, XMouseListener, XMenuListener, Rectangle
 from com.sun.star.awt.PosSize import POSSIZE
 from com.sun.star.awt.MouseButton import RIGHT
-from com.sun.star.awt import XActionListener, XTextListener, XMouseListener, Rectangle
 from com.sun.star.awt.PopupMenuDirection import EXECUTE_DEFAULT
 from com.sun.star.table import CellRangeAddress
+from com.sun.star.sheet.CellDeleteMode import UP
 from com.sun.star.table.CellVertJustify import CENTER as VJ_CENTER
 from com.sun.star.table.CellHoriJustify import CENTER as HJ_CENTER
+from uno import createUnoStruct
+from unohelper import Base
 
 PART_ATTR_LIST = ['Device', 'Value', 'Footprint', 'Quantity', 'Note1', 'Note2']
 PART_ATTR_LEN = len(PART_ATTR_LIST)
@@ -39,23 +40,29 @@ def out(obj):
         f.write('\n\n\r')
     f.close()
 
-class ButtonListener(unohelper.Base, XActionListener):
+class ButtonListener(Base, XActionListener):
     def __init__(self, cb):
         self.cb = cb
     def actionPerformed(self, evt):
         self.cb()
 
-class LabelListener(unohelper.Base, XMouseListener):
+class LabelListener(Base, XMouseListener):
     def __init__(self, cb):
         self.cb = cb
     def mouseReleased(self, evt):
         self.cb(evt)
 
-class ComboboxListener(unohelper.Base, XTextListener):
+class ComboboxListener(Base, XTextListener):
     def __init__(self, cb):
         self.cb = cb
     def textChanged(self, evt):
         self.cb(evt.Source)
+
+class MenuListener(Base, XMenuListener):
+    def __init__(self, cb):
+        self.cb = cb
+    def itemSelected(self, evt):
+        self.cb(evt.MenuId)
 
 def part_add_del_dec(f):
     def tmp(*args, **kwargs):
@@ -67,18 +74,18 @@ def part_add_del_dec(f):
         part[PART_ATTR_N] = ''
         index = mp.get_selection()
         if index == None:
-            mp.part_find()
+            mp.part_find_cb()
             mp.cc[PART_ATTR_N].setText(pn)
             return
         sht = mp.get_active_sheet()
         if not mp.part_cmp(sht, index, part):
-            mp.part_find()
+            mp.part_find_cb()
             mp.cc[PART_ATTR_N].setText(pn)
             return
         p1 = mp.get_part(sht, index)
         if ''.join(p1) == '' and index > 0:
-            if mp.part_find2(sht, part, 0) != index:
-                mp.part_find()
+            if mp.part_find(sht, part, 0) != index:
+                mp.part_find_cb()
                 mp.cc[PART_ATTR_N].setText(pn)
                 return
         return f(*args, **kwargs)
@@ -88,6 +95,9 @@ class MyParts(object):
     def __init__(self, ctx):
         self.ctx = ctx
         self.desktop = self.ctx.ServiceManager.createInstanceWithContext('com.sun.star.frame.Desktop', self.ctx)
+        self.doc = self.desktop.getCurrentComponent()
+        if self.get_active_sheet().Name == 'Labels':
+            return
         self.ll = []
         self.cc = []
         self.dlg = self.init_dlg()
@@ -107,8 +117,8 @@ class MyParts(object):
         dlg.createPeer(wnd, None)
         self.init_rows(dlg)
         self.init_buttons(dlg)
-        self.init_data(dlg)
-        self.part_dlg_combo_upd(self.cc[0])
+        if not self.init_data(dlg):
+            self.part_dlg_combo_upd(self.cc[0])
 
         return dlg
 
@@ -141,6 +151,7 @@ class MyParts(object):
 
     def init_rows(self, dlg):
         model = dlg.getModel()
+        self.li = []
         for i in range(0, PART_ATTR_LEN):
             label = PART_ATTR_LIST[i]
             #items = PART_ATTR_ITEMS[i]
@@ -151,7 +162,15 @@ class MyParts(object):
             listener = LabelListener(self.part_dlg_label_upd)
             l.addMouseListener(listener)
             listener = ComboboxListener(self.part_dlg_combo_upd)
+            self.li.append(listener)
             w.addTextListener(listener)
+
+    def enable_listeners(self, enable=True):
+        for i in range(0, len(self.cc)):
+            if enable:
+                self.cc[i].addTextListener(self.li[i])
+            else:
+                self.cc[i].removeTextListener(self.li[i])
 
     def init_button(self, dlg, posx, rown, label):
         model = dlg.getModel()
@@ -169,29 +188,30 @@ class MyParts(object):
     def init_buttons(self, dlg):
         model = dlg.getModel()
         btn = self.init_button(dlg, 0, 0, 'Find')
-        listener = ButtonListener(lambda: self.part_find())
+        listener = ButtonListener(self.part_find_cb)
         btn.addActionListener(listener)
         btn = self.init_button(dlg, model.Width/3, 0, 'Add')
-        listener = ButtonListener(lambda: self.part_add())
+        listener = ButtonListener(self.part_add_cb)
         btn.addActionListener(listener)
         btn = self.init_button(dlg, 2*model.Width/3, 0, 'Del')
-        listener = ButtonListener(lambda: self.part_del())
+        listener = ButtonListener(self.part_del_cb)
         btn.addActionListener(listener)
         self.move_to_btn = self.init_button(dlg, 0, 1, 'Move to...')
-        listener = ButtonListener(self.part_move)
+        listener = ButtonListener(self.part_move_cb)
         self.move_to_btn.addActionListener(listener)
         self.add_label_btn = self.init_button(dlg, model.Width/3, 1, 'Add label')
-        listener = ButtonListener(lambda: self.add_label())
+        listener = ButtonListener(self.add_label_cb)
         self.add_label_btn.addActionListener(listener)
+        btn = self.init_button(dlg, 2*model.Width/3, 1, 'Close')
+        listener = ButtonListener(self.close_cb)
+        btn.addActionListener(listener)
         return dlg
 
     def init_data(self, dlg):
-        doc = self.desktop.getCurrentComponent()
-        ctrlr = doc.CurrentController
         sht = self.get_active_sheet()
         index = self.get_selection()
         if index == None:
-            area = ctrlr.getSelection().getRangeAddress()
+            area = self.doc.CurrentController.getSelection().getRangeAddress()
             index = area.StartRow
             cell = sht.getCellByPosition(0, index)
             if index == 0:
@@ -204,19 +224,21 @@ class MyParts(object):
                     return
         part = self.get_part(sht, index)
         l = min(len(part), PART_ATTR_LEN)
+        self.enable_listeners(False)
         for i in range(0, l):
             self.cc[i].setText(part[i])
+        self.enable_listeners(True)
+        return True
 
     def get_combo_itemlist(self, index):
         itemlist = PART_ATTR_ITEMS[index]
+        '''
         if index >= PART_ATTR_N:
             return itemlist
         ii = set()
         for i in itemlist:
             ii.add(i)
-        doc = self.desktop.getCurrentComponent()
-        ctrlr = doc.CurrentController
-        sht = ctrlr.ActiveSheet
+        sht = self.get_active_sheet()
         r = 0
         while True:
             cell = sht.getCellByPosition(index, r)
@@ -227,6 +249,7 @@ class MyParts(object):
                 break
             r = r + 1
         itemlist = tuple(sorted(list(ii)))
+        '''
         return itemlist
 
     def part_dlg_label_upd(self, evt):
@@ -270,17 +293,14 @@ class MyParts(object):
                 note2wm.Text = PART_ATTR_DFLT[-1]
 
     def execute(self):
-        self.dlg.execute()
+        if hasattr(self, 'dlg'):
+            self.dlg.execute()
 
     def get_active_sheet(self):
-        doc = self.desktop.getCurrentComponent()
-        ctrlr = doc.CurrentController
-        return ctrlr.ActiveSheet
+        return self.doc.CurrentController.ActiveSheet
 
     def get_selection(self):
-        doc = self.desktop.getCurrentComponent()
-        ctrlr = doc.CurrentController
-        sel = ctrlr.getSelection()
+        sel = self.doc.CurrentController.getSelection()
         area = sel.getRangeAddress()
         if area.StartRow != area.EndRow or area.StartColumn != 0 or area.EndColumn != PART_ATTR_LEN - 1:
             return
@@ -288,11 +308,9 @@ class MyParts(object):
         return area.StartRow
 
     def set_selection(self, index):
-        doc = self.desktop.getCurrentComponent()
-        ctrlr = doc.CurrentController
         sht = self.get_active_sheet()
         sel = sht.getCellRangeByPosition(0, index, PART_ATTR_LEN - 1, index)
-        ctrlr.select(sel)
+        self.doc.CurrentController.select(sel)
 
     def get_mypart(self):
         part1 = [a.Text for a in self.cc]
@@ -321,24 +339,11 @@ class MyParts(object):
         return p
 
     def get_sheet_names(self, skip=[]):
-        doc = self.desktop.getCurrentComponent()
-        names = [doc.Sheets.getByIndex(i).getName() for i in range(0, doc.Sheets.getCount())]
+        names = [self.doc.Sheets.getByIndex(i).getName() for i in range(0, self.doc.Sheets.getCount())]
         for s in skip:
             if s in names:
                 names.remove(s)
         return names
-
-    def set_part(self, sht, row, p, psz):
-        if not sht:
-            doc = self.desktop.getCurrentComponent()
-            ctrlr = doc.CurrentController
-            sht = ctrlr.ActiveSheet
-        for i in range(0, psz):
-            cell = sht.getCellByPosition(i, row)
-            if i < len(p):
-                cell.setString(p[i])
-            else:
-                cell.setString('')
 
     def part_cmp(self, sht, index, part):
         if sht == None:
@@ -354,7 +359,7 @@ class MyParts(object):
                 return False
         return True
 
-    def part_find(self):
+    def part_find_cb(self):
         sht = self.get_active_sheet()
         part1 = self.get_mypart()
         checks = [l.getState() for l in self.ll]
@@ -368,20 +373,16 @@ class MyParts(object):
                 index += 1
         else:
             index = 0
-        index = self.part_find2(sht, part1, index)
-        doc = self.desktop.getCurrentComponent()
-        ctrlr = doc.CurrentController
+        index = self.part_find(sht, part1, index)
         self.set_selection(index)
-        #sel = sht.getCellRangeByPosition(0, index, PART_ATTR_LEN - 1, index)
-        #ctrlr.select(sel)
         part = self.get_part(sht, index)
-        if ''.join(part) == '':
+        if not part:
             return
         for i in range(0, len(self.cc)):
             self.cc[i].setText(part[i])
             self.ll[i].setState(checks[i])
 
-    def part_find2(self, sht, part, start=0):
+    def part_find(self, sht, part, start=0):
         if sht == None:
             sht = self.get_active_sheet()
         index = start
@@ -393,70 +394,107 @@ class MyParts(object):
                 return index
             index += 1
 
-    @part_add_del_dec
-    def part_add(self):
-        sht = self.get_active_sheet()
-        index = self.get_selection()
+    def part_eq(self):
         part = [a.Text for a in self.cc]
-        p1 = self.get_part(sht, index)
-        if not p1:
-            part = [a.Text for a in self.cc]
+        part[PART_ATTR_N] = ''
+        index = self.get_selection()
+        if index == None:
+            return False
+        sht = self.get_active_sheet()
+        part1 = self.get_part(sht, index)
+        if not part1:
+            return False
+        return self.part_cmp(sht, index, part)
+
+    @part_add_del_dec
+    def part_add_cb(self):
+        self.part_add(self.get_active_sheet(), self.get_selection())
+
+    def part_add(self, sht, index=None):
+        part = [a.Text for a in self.cc]
+        if index == None:
+            qty = part[PART_ATTR_N]
+            part[PART_ATTR_N] = ''
+            index = self.part_find(sht, part, 0)
+            part[PART_ATTR_N] = qty
+        part1 = self.get_part(sht, index)
+        if not part1:
             for i in range(0, PART_ATTR_LEN):
                 cell = sht.getCellByPosition(i, index)
                 cell.setString(part[i])
         else:
             cell = sht.getCellByPosition(PART_ATTR_N, index)
-            n = int(cell.getString())
-            n += int(part[PART_ATTR_N])
-            cell.setString('%d' % n)
+            qty = int(cell.getString())
+            qty += int(part[PART_ATTR_N])
+            cell.setString('%d' % qty)
 
     @part_add_del_dec
-    def part_del(self):
+    def part_del_cb(self):
         sht = self.get_active_sheet()
         index = self.get_selection()
         p1 = self.get_part(sht, index)
-        if ''.join(p1) == '':
+        if not p1:
             return
         part = [a.Text for a in self.cc]
-        doc = self.desktop.getCurrentComponent()
-        ctrlr = doc.CurrentController
-        cell = sht.getCellByPosition(PART_ATTR_N, index)
-        n = int(cell.getString())
-        n -= int(part[PART_ATTR_N])
-        if n > 0:
-            cell.setString('%d' % n)
+        self.part_del(sht, index, int(part[PART_ATTR_N]))
+
+    def part_del(self, sht, index, qty):
+        if sht == None:
+            sht = self.get_active_sheet()
+        part1 = self.get_part(sht, index)
+        qty1 = int(part1[PART_ATTR_N])
+        if qty < qty1:
+            cell = sht.getCellByPosition(PART_ATTR_N, index)
+            cell.setString('%d' % (qty1 - qty))
         else:
-            name1 = ctrlr.ActiveSheet.Name
-            index1 = list(doc.getSheets().ElementNames).index(name1)
-            area = sht.getRangeAddress()
-            arange = uno.createUnoStruct('com.sun.star.table.CellRangeAddress')
+            index1 = self.get_sheet_names().index(sht.Name)
+            sel = self.doc.CurrentController.getSelection()
+            area = sel.getRangeAddress()
+            arange = createUnoStruct('com.sun.star.table.CellRangeAddress')
             arange.Sheet = index1
             arange.StartColumn = area.StartColumn
             arange.StartRow = area.StartRow
             arange.EndColumn = area.EndColumn
             arange.EndRow = area.EndRow
             sht.removeRange(arange, UP)
+            #self.msgbox('%d %d %d %d' % (area.StartColumn, area.StartRow, area.EndColumn, area.EndRow))
 
-    def part_move(self):
+    def part_move_cb(self):
+        if not self.part_eq():
+            return
         sht = self.get_active_sheet()
         shtn = self.get_sheet_names(['Labels', sht.Name])
-        if len(shtn) == 0:
+        if not shtn:
+            return
+        index = self.get_selection()
+        if index == None:
             return
         menu = self.createUnoService('com.sun.star.awt.PopupMenu')
         for i in range(0, len(shtn)):
             menu.insertItem(i+1, shtn[i], 0, i)
+        listener = MenuListener(self.part_move)
+        menu.addMenuListener(listener)
         rect = Rectangle()
         btnpos = self.move_to_btn.PosSize
         rect.X = btnpos.X + btnpos.Width/2
         rect.Y = btnpos.Y + btnpos.Height/2
         menu.execute(self.dlg.Peer, rect, EXECUTE_DEFAULT)
-        #self.msgbox('Part move')
 
-    def add_label(self):
-        shtn = self.get_sheet_names()
-        doc = self.desktop.getCurrentComponent()
+    def part_move(self, menuid):
+        sht = self.get_active_sheet()
+        shtn = self.get_sheet_names(['Labels', sht.Name])
+        sht1 = self.doc.Sheets.getByName(shtn[menuid-1])
+        index = self.get_selection()
+        part = self.get_part(sht, index)
+        qty = int(part[PART_ATTR_N])
+        part1 = [a.Text for a in self.cc]
+        qty1 = int(part1[PART_ATTR_N])
+        self.part_del(sht, index, qty1)
+        self.part_add(sht1)
+
+    def add_label_cb(self):
         self.init_labels()
-        index = self.add_label1()
+        index = self.add_label()
         if type(index) == int:
             self.add_label_btn.Label = 'Add label %d' % (index + 1)
 
@@ -475,10 +513,9 @@ class MyParts(object):
 
     def init_labels(self):
         shtn = self.get_sheet_names()
-        doc = self.desktop.getCurrentComponent()
         labels = 'Labels'
         if labels not in shtn:
-            doc.Sheets.insertNewByName(labels, len(shtn))
+            self.doc.Sheets.insertNewByName(labels, len(shtn))
         else:
             return
 
@@ -493,11 +530,17 @@ class MyParts(object):
                 return 'Qty'
             return PART_ATTR_LIST[i]
         if col == 1:
+            if i == 1:
+                text = self.cc[1].Text
+                for i in [PART_ATTR_N + 1, PART_ATTR_N + 2]:
+                    texti = self.cc[i].Text
+                    if texti:
+                        text += '/' + texti
+                return text
             return self.cc[i].Text
 
-    def add_label1(self, index=None):
-        doc = self.desktop.getCurrentComponent()
-        sht1 = doc.Sheets.getByName('Labels')
+    def add_label(self, index=None):
+        sht1 = self.doc.Sheets.getByName('Labels')
         for i in range(0, 21):
             row = 6*int(i / 3)
             col = 3*int(i % 3)
@@ -507,7 +550,6 @@ class MyParts(object):
                 break
         if index == None:
             return False
-        #sht1.Rows.Height *= 2
         k1 = 1
         k2 = 1.5
         if index == 0:
@@ -552,6 +594,9 @@ class MyParts(object):
         cell.HoriJustify = HJ_CENTER
         return index
 
+    def close_cb(self):
+        self.dlg.endExecute()
+
     def msgbox(self, msg='message', title='Message', btntype=1):
         frame = self.desktop.getCurrentFrame()
         window = frame.getContainerWindow()
@@ -563,7 +608,7 @@ class MyParts(object):
         return self.ctx.getServiceManager().createInstance(name)
 
     def center(self, model):
-        parentpos = self.desktop.getCurrentComponent().CurrentController.Frame.ContainerWindow.PosSize
+        parentpos = self.doc.CurrentController.Frame.ContainerWindow.PosSize
         #self.msgbox('%s %s' % (parentpos.Width, parentpos.Height))
         model.PositionX = parentpos.Width/8
         model.PositionY = parentpos.Height/8
