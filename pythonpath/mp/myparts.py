@@ -151,7 +151,6 @@ class MyParts(object):
 
     def init_rows(self, dlg):
         model = dlg.getModel()
-        self.li = []
         for i in range(0, PART_ATTR_LEN):
             label = PART_ATTR_LIST[i]
             #items = PART_ATTR_ITEMS[i]
@@ -162,15 +161,10 @@ class MyParts(object):
             listener = LabelListener(self.part_dlg_label_upd)
             l.addMouseListener(listener)
             listener = ComboboxListener(self.part_dlg_combo_upd)
-            self.li.append(listener)
             w.addTextListener(listener)
 
-    def enable_listeners(self, enable=True):
-        for i in range(0, len(self.cc)):
-            if enable:
-                self.cc[i].addTextListener(self.li[i])
-            else:
-                self.cc[i].removeTextListener(self.li[i])
+    def dropdown_cb(self):
+        self.msgbox('dropdown')
 
     def init_button(self, dlg, posx, rown, label):
         model = dlg.getModel()
@@ -224,10 +218,8 @@ class MyParts(object):
                     return
         part = self.get_part(sht, index)
         l = min(len(part), PART_ATTR_LEN)
-        self.enable_listeners(False)
         for i in range(0, l):
             self.cc[i].setText(part[i])
-        self.enable_listeners(True)
         return True
 
     def get_combo_itemlist(self, index):
@@ -264,6 +256,7 @@ class MyParts(object):
         i = self.cc.index(source)
         self.ll[i].setState(1)
         devw = self.cc[0]
+        valw = self.cc[1]
         if source == devw:
             out(self.ll[0])
             note1lm = self.ll[-2].getModel()
@@ -291,6 +284,31 @@ class MyParts(object):
                 note2lm.Label = PART_ATTR_LIST[-1]
                 note2wm.StringItemList = PART_ATTR_ITEMS[-1]
                 note2wm.Text = PART_ATTR_DFLT[-1]
+        fpwm = self.cc[2].getModel()
+        fps = PART_ATTR_ITEMS[2]
+        if devw.Text not in PART_ATTR_ITEMS[0]:
+            fps1 = self.get_footprints(valw.Text)
+            if fps:
+                fps = fps1 + list(fps)
+                fps = tuple(fps)
+            fpwm.StringItemList = fps
+        else:
+            fpwm.StringItemList = fps
+
+    def get_footprints(self, partn):
+        shtn = self.get_sheet_names(['Labels'])
+        ret = []
+        for name in shtn:
+            sht1 = self.doc.Sheets.getByName(name)
+            i = 0
+            while True:
+                part = self.get_part(sht1, i)
+                if not part:
+                    break
+                i += 1
+                if part[1] == partn:
+                    ret.append(part[2])
+        return ret
 
     def execute(self):
         if hasattr(self, 'dlg'):
