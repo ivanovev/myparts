@@ -216,10 +216,6 @@ class MyParts(object):
                 self.set_selection(index)
                 if not self.get_part(sht, index):
                     return
-        part = self.get_part(sht, index)
-        l = min(len(part), PART_ATTR_LEN)
-        for i in range(0, l):
-            self.cc[i].setText(part[i])
         return True
 
     def get_combo_itemlist(self, index):
@@ -329,6 +325,10 @@ class MyParts(object):
         sht = self.get_active_sheet()
         sel = sht.getCellRangeByPosition(0, index, PART_ATTR_LEN - 1, index)
         self.doc.CurrentController.select(sel)
+        part = self.get_part(sht, index)
+        l = min(len(part), PART_ATTR_LEN)
+        for i in range(0, l):
+            self.cc[i].setText(part[i])
 
     def get_mypart(self):
         part1 = [a.Text for a in self.cc]
@@ -397,7 +397,6 @@ class MyParts(object):
         if not part:
             return
         for i in range(0, len(self.cc)):
-            self.cc[i].setText(part[i])
             self.ll[i].setState(checks[i])
 
     def part_find(self, sht, part, start=0):
@@ -511,10 +510,18 @@ class MyParts(object):
         self.part_add(sht1)
 
     def add_label_cb(self):
+        index = self.get_selection()
+        if index == None:
+            return
+        sht = self.get_active_sheet()
+        part = self.get_part(sht, index)
+        if not part:
+            return
         self.init_labels()
-        index = self.add_label()
-        if type(index) == int:
-            self.add_label_btn.Label = 'Add label %d' % (index + 1)
+        counter = self.add_label()
+        if type(counter) == int:
+            self.add_label_btn.Label = 'Add label %d' % (counter + 1)
+        self.set_selection(index+1)
 
     def cell_border(self, cell):
         border = cell.TopBorder
