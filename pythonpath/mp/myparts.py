@@ -216,6 +216,10 @@ class MyParts(object):
                 self.set_selection(index)
                 if not self.get_part(sht, index):
                     return
+        part = self.get_part(sht, index)
+        l = min(len(part), PART_ATTR_LEN)
+        for i in range(0, l):
+            self.cc[i].setText(part[i])
         return True
 
     def get_combo_itemlist(self, index):
@@ -266,13 +270,17 @@ class MyParts(object):
                 note2lm.Label = PART_ATTR_LIST[-1]
                 note2wm.StringItemList = PART_ATTR_ITEMS[-1]
                 note2wm.Text = PART_ATTR_DFLT[-1]
+                if valw.Text == '1u':
+                    valw.Text = '1k'
             elif devw.Text == 'CAPACITOR':
                 note1lm.Label = 'Voltage'
                 note1wm.StringItemList = ('16V', '25V', '50V')
                 note1wm.Text = '50V'
                 note2lm.Label = 'Dielectric'
                 note2wm.StringItemList = ('NPO', 'X5R', 'X7R', 'Y5V')
-                note2wm.Text = 'X5R'
+                note2wm.Text = 'NPO'
+                if valw.Text == '1k':
+                    valw.Text = '1u'
             else:
                 note1lm.Label = PART_ATTR_LIST[-2]
                 note1wm.StringItemList = PART_ATTR_ITEMS[-2]
@@ -325,10 +333,6 @@ class MyParts(object):
         sht = self.get_active_sheet()
         sel = sht.getCellRangeByPosition(0, index, PART_ATTR_LEN - 1, index)
         self.doc.CurrentController.select(sel)
-        part = self.get_part(sht, index)
-        l = min(len(part), PART_ATTR_LEN)
-        for i in range(0, l):
-            self.cc[i].setText(part[i])
 
     def get_mypart(self):
         part1 = [a.Text for a in self.cc]
@@ -397,6 +401,7 @@ class MyParts(object):
         if not part:
             return
         for i in range(0, len(self.cc)):
+            self.cc[i].setText(part[i])
             self.ll[i].setState(checks[i])
 
     def part_find(self, sht, part, start=0):
@@ -510,18 +515,10 @@ class MyParts(object):
         self.part_add(sht1)
 
     def add_label_cb(self):
-        index = self.get_selection()
-        if index == None:
-            return
-        sht = self.get_active_sheet()
-        part = self.get_part(sht, index)
-        if not part:
-            return
         self.init_labels()
-        counter = self.add_label()
-        if type(counter) == int:
-            self.add_label_btn.Label = 'Add label %d' % (counter + 1)
-        self.set_selection(index+1)
+        index = self.add_label()
+        if type(index) == int:
+            self.add_label_btn.Label = 'Add label %d' % (index + 1)
 
     def cell_border(self, cell):
         border = cell.TopBorder
@@ -544,7 +541,7 @@ class MyParts(object):
         else:
             return
 
-    def format_cell_text(self, i, col):
+    def format_label_text(self, i, col):
         rc = self.cc[0].Text in ['RESISTOR', 'CAPACITOR']
         if col == 0:
             if i == 1 and not rc:
@@ -552,22 +549,25 @@ class MyParts(object):
             if i == 2:
                 return 'Package'
             if i == 3:
+                return 'Notes'
+            if i == 4:
                 return 'Qty'
             return PART_ATTR_LIST[i]
         if col == 1:
-            if i == 1:
-                text = self.cc[1].Text
-                for i in [PART_ATTR_N + 1, PART_ATTR_N + 2]:
-                    texti = self.cc[i].Text
-                    if texti:
-                        text += '/' + texti
-                return text
-            return self.cc[i].Text
+            text = self.cc[i].Text
+            if i == 3:
+                text = self.cc[PART_ATTR_N + 1].Text
+                note2 = self.cc[PART_ATTR_N + 2].Text
+                if note2:
+                    text += '   ' + note2
+            if i == 4:
+                text = self.cc[PART_ATTR_N].Text
+            return text
 
     def add_label(self, index=None):
         sht1 = self.doc.Sheets.getByName('Labels')
         for i in range(0, 21):
-            row = 6*int(i / 3)
+            row = 7*int(i / 3)
             col = 3*int(i % 3)
             cell = sht1.getCellByPosition(col, row)
             if not cell.getString():
@@ -576,7 +576,7 @@ class MyParts(object):
         if index == None:
             return False
         k1 = 1
-        k2 = 1.5
+        k2 = 1.4
         if index == 0:
             sht1.Columns.getByIndex(0).Width *= k1
             sht1.Columns.getByIndex(1).Width *= k2
@@ -588,34 +588,34 @@ class MyParts(object):
             sht1.Columns.getByIndex(5).Width /= 10
             sht1.Columns.getByIndex(6).Width *= k1
             sht1.Columns.getByIndex(7).Width *= k2
-        row = 6*int(index / 3)
+        row = 7*int(index / 3)
         col = 3*int(index % 3)
         rr = False
         #self.msgbox(str(index) + str(row) + str(col))
-        if sht1.Rows.getByIndex(row).Height == sht1.Rows.getByIndex(row + PART_ATTR_N + 1).Height:
+        if sht1.Rows.getByIndex(row).Height == sht1.Rows.getByIndex(row + PART_ATTR_N + 2).Height:
             rr = True
-        for i in range(0, PART_ATTR_N+1):
+        for i in range(0, PART_ATTR_N+2):
             if col == 0 and rr:
-                sht1.Rows.getByIndex(row + i).Height *= 1.5
+                sht1.Rows.getByIndex(row + i).Height *= 1.3
                 if i == 0 and row:
                     sht1.Rows.getByIndex(row - 1).Height /= 2
             cell = sht1.getCellByPosition(col, row + i)
             cell = self.cell_border(cell)
-            cell.setString(self.format_cell_text(i, 0))
+            cell.setString(self.format_label_text(i, 0))
             cell = sht1.getCellByPosition(col + 1, row + i)
             cell = self.cell_border(cell)
             cell.HoriJustify = HJ_CENTER
-            cell.setString(self.format_cell_text(i, 1))
-        cell = sht1.getCellByPosition(col, row+PART_ATTR_N+1)
+            cell.setString(self.format_label_text(i, 1))
+        cell = sht1.getCellByPosition(col, row+PART_ATTR_N+2)
         cell = self.cell_border(cell)
         cell.CharHeight = 8
         if row or col:
-            cell.Formula = "=A5"
-        cell = sht1.getCellByPosition(col + 1, row+PART_ATTR_N+1)
+            cell.Formula = "=A6"
+        cell = sht1.getCellByPosition(col + 1, row+PART_ATTR_N+2)
         cell = self.cell_border(cell)
         cell.CharHeight = 8
         if row or col:
-            cell.Formula = "=B5"
+            cell.Formula = "=B6"
         cell.HoriJustify = HJ_CENTER
         return index
 
