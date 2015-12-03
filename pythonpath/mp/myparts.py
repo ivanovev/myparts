@@ -15,7 +15,7 @@ from unohelper import Base
 PART_ATTR_LIST = ['Device', 'Value', 'Footprint', 'Quantity', 'Note1', 'Note2']
 PART_ATTR_LEN = len(PART_ATTR_LIST)
 PART_ATTR_ITEMS = [
-    ('RESISTOR', 'CAPACITOR', 'INDUCTOR', 'CONNECTOR', 'LED'),
+    ('RESISTOR', 'CAPACITOR', 'INDUCTOR', 'CONNECTOR', 'LED', 'XTAL'),
     ('1p', '1n', '1u', '1m', '1', '1k', '1M'),
     ('0402', '0603', '0805', '1206'),
     ('1', '2', '3', '4', '5'),
@@ -542,10 +542,15 @@ class MyParts(object):
             return
 
     def format_label_text(self, i, col):
-        rc = self.cc[0].Text in ['RESISTOR', 'CAPACITOR']
+        p = self.cc[0].Text
+        rc = p in ['RESISTOR', 'CAPACITOR']
+        x = p == 'XTAL'
         if col == 0:
-            if i == 1 and not rc:
-                return 'Part #'
+            if i == 1:
+                if x:
+                    return 'Frequency'
+                if not rc:
+                    return 'Part #'
             if i == 2:
                 return 'Package'
             if i == 3:
@@ -596,9 +601,9 @@ class MyParts(object):
             rr = True
         for i in range(0, PART_ATTR_N+2):
             if col == 0 and rr:
-                sht1.Rows.getByIndex(row + i).Height *= 1.3
+                sht1.Rows.getByIndex(row + i).Height *= 1.25
                 if i == 0 and row:
-                    sht1.Rows.getByIndex(row - 1).Height /= 2
+                    sht1.Rows.getByIndex(row - 1).Height /= 5
             cell = sht1.getCellByPosition(col, row + i)
             cell = self.cell_border(cell)
             cell.setString(self.format_label_text(i, 0))
