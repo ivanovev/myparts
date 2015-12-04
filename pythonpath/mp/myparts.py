@@ -580,17 +580,17 @@ class MyParts(object):
                 break
         if index == None:
             return False
-        k1 = 1
+        k1 = 1.05
         k2 = 1.4
         if index == 0:
             sht1.Columns.getByIndex(0).Width *= k1
             sht1.Columns.getByIndex(1).Width *= k2
         if index == 1:
-            sht1.Columns.getByIndex(2).Width /= 10
+            sht1.Columns.getByIndex(2).Width /= 12
             sht1.Columns.getByIndex(3).Width *= k1
             sht1.Columns.getByIndex(4).Width *= k2
         if index == 2:
-            sht1.Columns.getByIndex(5).Width /= 10
+            sht1.Columns.getByIndex(5).Width /= 12
             sht1.Columns.getByIndex(6).Width *= k1
             sht1.Columns.getByIndex(7).Width *= k2
         row = 7*int(index / 3)
