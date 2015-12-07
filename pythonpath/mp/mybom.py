@@ -121,9 +121,17 @@ class MyBOM(object):
             part = self.get_part(sht, partn)
             if not part:
                 break
-            if len(part) < 3:
+            if len(part) < mp.PART_ATTR_N:
                 break
-            part = part[0:3]
+            part = part[0:mp.PART_ATTR_N]
+            pv = part[1]
+            pvv = pv.split('/')
+            if len(pvv) > 1:
+                part[1] = pvv[0]
+                part.append('')
+                part.append(pvv[1])
+                if len(pvv) > 2:
+                    part.append(pvv[2])
             qty = 0
             qtyd = OD()
             index = 0
@@ -132,6 +140,7 @@ class MyBOM(object):
                 index = self.part_find(sht1, part, index)
                 part2 = self.get_part(sht1, index)
                 if not part2:
+                    index = 0
                     continue
                 qty1 = int(part2[mp.PART_ATTR_N])
                 qty += qty1
