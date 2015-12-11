@@ -117,7 +117,7 @@ class MyParts(object):
         dlg.createPeer(wnd, None)
         self.init_rows(dlg)
         self.init_buttons(dlg)
-        if not self.init_data(dlg):
+        if not self.init_data():
             self.part_dlg_combo_upd(self.cc[0])
 
         return dlg
@@ -201,7 +201,7 @@ class MyParts(object):
         btn.addActionListener(listener)
         return dlg
 
-    def init_data(self, dlg):
+    def init_data(self):
         sht = self.get_active_sheet()
         index = self.get_selection()
         if index == None:
@@ -459,6 +459,8 @@ class MyParts(object):
             return
         part = [a.Text for a in self.cc]
         self.part_del(sht, index, int(part[PART_ATTR_N]))
+        if not self.init_data():
+            self.part_dlg_combo_upd(self.cc[0])
 
     def part_del(self, sht, index, qty):
         if sht == None:
