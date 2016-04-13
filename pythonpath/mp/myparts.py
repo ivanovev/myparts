@@ -2,6 +2,7 @@
 from com.sun.star.awt.MessageBoxType import MESSAGEBOX, INFOBOX, WARNINGBOX, ERRORBOX, QUERYBOX
 from com.sun.star.awt.PushButtonType import STANDARD, OK, CANCEL
 from com.sun.star.awt import XActionListener, XTextListener, XMouseListener, XMenuListener, Rectangle
+from com.sun.star.awt import XWindowListener
 from com.sun.star.awt.PosSize import POSSIZE
 from com.sun.star.awt.MouseButton import RIGHT
 from com.sun.star.awt.PopupMenuDirection import EXECUTE_DEFAULT
@@ -52,11 +53,12 @@ class LabelListener(Base, XMouseListener):
     def mouseReleased(self, evt):
         self.cb(evt)
 
-class ComboboxListener(Base, XTextListener):
+class ComboboxListener(Base, XMouseListener):
     def __init__(self, cb):
         self.cb = cb
-    def textChanged(self, evt):
-        self.cb(evt.Source)
+    def mousePressed(self, evt):
+        if evt.Buttons == RIGHT:
+            self.cb(evt.Source)
 
 class MenuListener(Base, XMenuListener):
     def __init__(self, cb):
@@ -153,15 +155,14 @@ class MyParts(object):
         model = dlg.getModel()
         for i in range(0, PART_ATTR_LEN):
             label = PART_ATTR_LIST[i]
-            #items = PART_ATTR_ITEMS[i]
-            items = self.get_combo_itemlist(i)
+            items = PART_ATTR_ITEMS[i]
             l,w = self.init_row(dlg, i*model.Height/(PART_ATTR_LEN + 2), label, items)
             l.setState(1)
             w.Text = PART_ATTR_DFLT[i]
             listener = LabelListener(self.part_dlg_label_upd)
             l.addMouseListener(listener)
             listener = ComboboxListener(self.part_dlg_combo_upd)
-            w.addTextListener(listener)
+            w.addMouseListener(listener)
 
     def dropdown_cb(self):
         self.msgbox('dropdown')
@@ -222,28 +223,6 @@ class MyParts(object):
             self.cc[i].setText(part[i])
         return True
 
-    def get_combo_itemlist(self, index):
-        itemlist = PART_ATTR_ITEMS[index]
-        '''
-        if index >= PART_ATTR_N:
-            return itemlist
-        ii = set()
-        for i in itemlist:
-            ii.add(i)
-        sht = self.get_active_sheet()
-        r = 0
-        while True:
-            cell = sht.getCellByPosition(index, r)
-            s = cell.getString()
-            if s:
-                ii.add(s)
-            else:
-                break
-            r = r + 1
-        itemlist = tuple(sorted(list(ii)))
-        '''
-        return itemlist
-
     def part_dlg_label_upd(self, evt):
         if evt.Buttons == RIGHT:
             state = evt.Source.getState()
@@ -258,7 +237,6 @@ class MyParts(object):
         devw = self.cc[0]
         valw = self.cc[1]
         if source == devw:
-            out(self.ll[0])
             note1lm = self.ll[-2].getModel()
             note1wm = self.cc[-2].getModel()
             note2lm = self.ll[-1].getModel()
@@ -288,18 +266,20 @@ class MyParts(object):
                 note2lm.Label = PART_ATTR_LIST[-1]
                 note2wm.StringItemList = PART_ATTR_ITEMS[-1]
                 note2wm.Text = PART_ATTR_DFLT[-1]
-        fpwm = self.cc[2].getModel()
+        fpw = self.cc[2]
+        fpwm = fpw.getModel()
         fps = PART_ATTR_ITEMS[2]
-        if devw.Text not in PART_ATTR_ITEMS[0]:
-            fps1 = self.get_footprints(valw.Text)
+        if source == fpw:
             if fps:
-                fps = fps1 + list(fps)
+                fps = list(fps)
+                fps1 = self.get_footprints(valw.Text, fps)
+                fps = fps1 + fps
                 fps = tuple(fps)
             fpwm.StringItemList = fps
         else:
             fpwm.StringItemList = fps
 
-    def get_footprints(self, partn):
+    def get_footprints(self, partn, skip=[]):
         shtn = self.get_sheet_names(['Labels'])
         ret = []
         for name in shtn:
@@ -310,7 +290,7 @@ class MyParts(object):
                 if not part:
                     break
                 i += 1
-                if part[1] == partn:
+                if part[1] == partn and part[2] not in ret and part[2] not in skip:
                     ret.append(part[2])
         return ret
 
