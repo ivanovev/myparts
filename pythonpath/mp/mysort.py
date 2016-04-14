@@ -133,7 +133,6 @@ def mysort(*args):
     if dirname not in sys.path:
         sys.path.append(os.path.dirname(fname))
     global mp
-    #import myparts
     mp = __import__('myparts')
     MS = type('MySort', (MySort, mp.MyParts), {})
     MS(XSCRIPTCONTEXT.getComponentContext()).execute()

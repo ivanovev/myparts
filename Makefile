@@ -4,6 +4,8 @@ FILES=MP.py \
 	pythonpath/mp/mysort.py \
 	pythonpath/mp/mybom.py \
 	Addons.xcu \
+	config.xcd \
+	config.xcs \
 	description.xml \
 	Office/UI/CalcWindowState.xcu \
 	images/Logo.png \

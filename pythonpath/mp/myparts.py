@@ -1,11 +1,10 @@
 
+from com.sun.star.awt import XActionListener, XMouseListener, XMenuListener, Rectangle
 from com.sun.star.awt.MessageBoxType import MESSAGEBOX, INFOBOX, WARNINGBOX, ERRORBOX, QUERYBOX
-from com.sun.star.awt.PushButtonType import STANDARD, OK, CANCEL
-from com.sun.star.awt import XActionListener, XTextListener, XMouseListener, XMenuListener, Rectangle
-from com.sun.star.awt import XWindowListener
-from com.sun.star.awt.PosSize import POSSIZE
 from com.sun.star.awt.MouseButton import RIGHT
 from com.sun.star.awt.PopupMenuDirection import EXECUTE_DEFAULT
+from com.sun.star.awt.PosSize import POSSIZE
+from com.sun.star.awt.PushButtonType import STANDARD, OK, CANCEL
 from com.sun.star.table import CellRangeAddress
 from com.sun.star.sheet.CellDeleteMode import UP
 from com.sun.star.table.CellVertJustify import CENTER as VJ_CENTER
@@ -34,8 +33,8 @@ PART_ATTR_DFLT = [
 
 PART_ATTR_N = 3
 
-def out(obj):
-    f = open('/tmp/out', 'w')
+def out(obj, name='out'):
+    f = open('/tmp/'+name, 'w')
     for i in dir(obj):
         f.write(str(i))
         f.write('\n\n\r')
@@ -182,8 +181,12 @@ class MyParts(object):
 
     def init_buttons(self, dlg):
         model = dlg.getModel()
-        btn = self.init_button(dlg, 0, 0, 'Find')
-        listener = ButtonListener(self.part_find_cb)
+        if 0:
+            btn = self.init_button(dlg, 0, 0, 'Find')
+            listener = ButtonListener(self.part_find_cb)
+        else:
+            btn = self.init_button(dlg, 0, 0, 'Search')
+            listener = ButtonListener(self.part_search_cb)
         btn.addActionListener(listener)
         btn = self.init_button(dlg, model.Width/3, 0, 'Add')
         listener = ButtonListener(self.part_add_cb)
@@ -383,6 +386,13 @@ class MyParts(object):
         for i in range(0, len(self.cc)):
             self.cc[i].setText(part[i])
             self.ll[i].setState(checks[i])
+
+    def part_search_cb(self):
+        part1 = self.get_mypart()
+        if hasattr(self, 'search'):
+            self.search.close_cb()
+        self.search = ms.MySearch(self.ctx, part1)
+        self.search.execute()
 
     def part_find(self, sht, part, start=0):
         if sht == None:
@@ -628,5 +638,16 @@ class MyParts(object):
         #model.PositionY = 1
 
 def myparts(*args):
-    MyParts(XSCRIPTCONTEXT.getComponentContext()).execute()
+    import os, sys
+    prefix = 'file://'
+    fname = __file__
+    if fname.find(prefix) == 0:
+        fname = __file__.replace(prefix, '', 1)
+    dirname = os.path.dirname(fname)
+    if dirname not in sys.path:
+        sys.path.append(os.path.dirname(fname))
+    global ms
+    ms = __import__('mysearch')
+    MP = type('MyParts', (MyParts, ms.MySearch), {})
+    MP(XSCRIPTCONTEXT.getComponentContext()).execute()
 

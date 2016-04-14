@@ -1,0 +1,33 @@
+﻿<?xml version='1.0' encoding='UTF-8'?>
+<oor:component-schema 
+	xmlns:oor="http://openoffice.org/2001/registry" xml:lang="en-US" 
+	xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	oor:package="vnd.myparts"
+    oor:name="settings">
+	<templates/>
+	<component>
+		<group oor:name="mysearch">
+			<prop oor:name="x" oor:type="xs:int">
+				<info>
+					<desc>Window X</desc>
+				</info>
+			</prop>
+			<prop oor:name="y" oor:type="xs:int">
+				<info>
+					<desc>Window Y</desc>
+				</info>
+			</prop>
+			<prop oor:name="w" oor:type="xs:int">
+				<info>
+					<desc>Window W</desc>
+				</info>
+			</prop>
+			<prop oor:name="h" oor:type="xs:int">
+				<info>
+					<desc>Window H</desc>
+				</info>
+			</prop>
+		</group>
+	</component>
+</oor:component-schema>

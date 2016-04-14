@@ -3,4 +3,6 @@
  <manifest:file-entry manifest:full-path="Addons.xcu" manifest:media-type="application/vnd.sun.star.configuration-data"/>
  <manifest:file-entry manifest:full-path="Office/UI/CalcWindowState.xcu" manifest:media-type="application/vnd.sun.star.configuration-data"/>
  <manifest:file-entry manifest:full-path="MP.py" manifest:media-type="application/vnd.sun.star.uno-component;type=Python"/>
+ <manifest:file-entry manifest:full-path="config.xcs" manifest:media-type="application/vnd.sun.star.configuration-schema"/>
+ <manifest:file-entry manifest:full-path="config.xcd" manifest:media-type="application/vnd.sun.star.configuration-data"/>
 </manifest:manifest>
