@@ -1,5 +1,6 @@
 FILES=MP.py \
 	pythonpath/mp/__init__.py \
+	pythonpath/mp/mysearch.py \
 	pythonpath/mp/myparts.py \
 	pythonpath/mp/mysort.py \
 	pythonpath/mp/mybom.py \

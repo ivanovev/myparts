@@ -10,6 +10,7 @@ class MP(unohelper.Base, XJobExecutor):
         import mp
         a = list(args)
         if a[0] == 'myparts':
+            mp.myparts.ms = mp.mysearch
             mp.myparts.MyParts(self.ctx).execute()
         elif a[0] == 'mysort':
             mp.mysort.mp = mp.myparts
