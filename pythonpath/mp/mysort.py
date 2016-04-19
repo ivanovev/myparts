@@ -1,23 +1,12 @@
 
 class MySort(object):
-    def init_dlg(self):
+    def __init__(self, ctx, title='MySort'):
         self.sortasc = True
-        ctx = self.ctx
-        smgr = ctx.ServiceManager
-        model = smgr.createInstanceWithContext('com.sun.star.awt.UnoControlDialogModel', ctx)
-        model.Width = 120
-        model.Height = 80
-        model.Title = 'Sort'
-        self.center(model)
-
-        dlg = self.createUnoService('com.sun.star.awt.UnoControlDialog')
-        dlg.setModel(model)
-        wnd = self.createUnoService('com.sun.star.awt.Toolkit')
-        dlg.createPeer(wnd, None)
-        self.init_buttons(dlg)
-        self.init_rows(dlg)
-
-        return dlg
+        self.x = 100
+        self.y = 100
+        self.w = 120
+        self.h = 80
+        mp.MyParts.__init__(self, ctx, title=title)
 
     def init_buttons(self, dlg):
         model = dlg.getModel()
@@ -91,19 +80,8 @@ class MySort(object):
                     break
         return kk
 
-    def set_part(self, sht, row, p, psz):
-        if not sht:
-            sht = self.get_active_sheet()
-        for i in range(0, psz):
-            cell = sht.getCellByPosition(i, row)
-            if i < len(p):
-                cell.setString(p[i])
-            else:
-                cell.setString('')
-
     def parts_sort_cb(self):
-        self.dlg.endExecute()
-        sht = self.get_active_sheet()
+        sht = self.get_sheet()
         pp = []
         row = 0
         while True:
@@ -116,7 +94,7 @@ class MySort(object):
         self.sortasc = not self.sortasc
         kk = self.get_keys()
         pp = sorted(pp, key=lambda p: '.'.join([p[k] for k in kk]), reverse=self.sortasc)
-        psz = mp.PART_ATTR_LEN
+        psz = ms.PART_ATTR_LEN
         for p in pp:
             if len(p) > psz:
                 psz = len(p)
@@ -132,8 +110,11 @@ def mysort(*args):
     dirname = os.path.dirname(fname)
     if dirname not in sys.path:
         sys.path.append(os.path.dirname(fname))
+    global ms
+    ms = __import__('mysearch')
     global mp
     mp = __import__('myparts')
-    MS = type('MySort', (MySort, mp.MyParts), {})
+    mp.ms = ms
+    MS = type('MySort', (MySort, mp.MyParts, ms.MySearch), {})
     MS(XSCRIPTCONTEXT.getComponentContext()).execute()
 

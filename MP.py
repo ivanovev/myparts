@@ -11,14 +11,19 @@ class MP(unohelper.Base, XJobExecutor):
         a = list(args)
         if a[0] == 'myparts':
             mp.myparts.ms = mp.mysearch
-            mp.myparts.MyParts(self.ctx).execute()
+            MP = type('MyParts', (mp.myparts.MyParts, mp.mysearch.MySearch), {})
+            MP(self.ctx).execute()
         elif a[0] == 'mysort':
             mp.mysort.mp = mp.myparts
-            MS = type('MySort', (mp.mysort.MySort, mp.myparts.MyParts), {})
+            mp.mysort.ms = mp.mysearch
+            mp.myparts.ms = mp.mysearch
+            MS = type('MySort', (mp.mysort.MySort, mp.myparts.MyParts, mp.mysearch.MySearch), {})
             MS(self.ctx).execute()
         elif a[0] == 'mybom':
             mp.mybom.mp = mp.myparts
-            MB = type('MyBOM', (mp.mybom.MyBOM, mp.myparts.MyParts), {})
+            mp.mybom.ms = mp.mysearch
+            mp.myparts.ms = mp.mysearch
+            MB = type('MyBOM', (mp.mybom.MyBOM, mp.myparts.MyParts, mp.mysearch.MySearch), {})
             MB(self.ctx).execute()
 
 # pythonloader looks for a static g_ImplementationHelper variable

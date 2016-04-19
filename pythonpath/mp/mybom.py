@@ -2,23 +2,12 @@
 from collections import OrderedDict as OD
 
 class MyBOM(object):
-    def init_dlg(self):
-        ctx = self.ctx
-        smgr = ctx.ServiceManager
-        model = smgr.createInstanceWithContext('com.sun.star.awt.UnoControlDialogModel', ctx)
-        model.Width = 120
-        model.Height = 120
-        model.Title = 'BOM'
-        self.center(model)
-
-        dlg = self.createUnoService('com.sun.star.awt.UnoControlDialog')
-        dlg.setModel(model)
-        wnd = self.createUnoService('com.sun.star.awt.Toolkit')
-        dlg.createPeer(wnd, None)
-        self.init_rows(dlg)
-        self.init_buttons(dlg)
-
-        return dlg
+    def __init__(self, ctx, title='MyBOM'):
+        self.x = 100
+        self.y = 100
+        self.w = 120
+        self.h = 120
+        mp.MyParts.__init__(self, ctx, title=title)
 
     def setup_attributes(self, wdgtm, label, posx, posy, w, h):
         if posx == 0:
@@ -68,7 +57,7 @@ class MyBOM(object):
         edit.ReadOnly = 1
         model.insertByName(edit.Name, edit)
         self.cc.append(dlg.getControl(edit.Name))
-        sht = self.get_active_sheet()
+        sht = self.get_sheet()
         edit.Text = sht.Name
         label = 'Search in'
         posy = model.Height/3
@@ -96,15 +85,14 @@ class MyBOM(object):
         return dlg
 
     def check_bom_cb(self):
-        self.dlg.endExecute()
-        sht = self.get_active_sheet()
+        sht = self.get_sheet()
         partn = 0
         while True:
             part = self.get_part(sht, partn)
             if not part:
                 break
-            if len(part) > mp.PART_ATTR_LEN:
-                col = mp.PART_ATTR_LEN
+            if len(part) > ms.PART_ATTR_LEN:
+                col = ms.PART_ATTR_LEN
                 while col <= len(part):
                     cell = sht.getCellByPosition(col, partn)
                     cell.clearContents(1023)
@@ -115,7 +103,7 @@ class MyBOM(object):
         if len(shts) == 0:
             return
         partn = 0
-        ynrow = mp.PART_ATTR_LEN
+        ynrow = ms.PART_ATTR_LEN
         qty = 0
         while True:
             part = self.get_part(sht, partn)
@@ -149,7 +137,7 @@ class MyBOM(object):
                 else:
                     qtyd[sht1.Name] += qty1
                 index += 1
-            cell = sht.getCellByPosition(mp.PART_ATTR_LEN, partn)
+            cell = sht.getCellByPosition(ms.PART_ATTR_LEN, partn)
             part = self.get_part(sht, partn)
             qtyn = int(self.cc[0].Text)*int(part[mp.PART_ATTR_N])
             if qty < qtyn:
@@ -160,7 +148,7 @@ class MyBOM(object):
                 cell.setString('YES')
                 cell.CharColor = 0x00AA00
                 cell.CharWeight = 150
-            index = mp.PART_ATTR_LEN + 1
+            index = ms.PART_ATTR_LEN + 1
             for k,v in qtyd.items():
                 cell = sht.getCellByPosition(index, partn)
                 cell.setString('%d' % v)
@@ -179,9 +167,11 @@ def mybom(*args):
     dirname = os.path.dirname(fname)
     if dirname not in sys.path:
         sys.path.append(os.path.dirname(fname))
+    global ms
+    ms = __import__('mysearch')
     global mp
-    #import myparts
     mp = __import__('myparts')
-    MS = type('MyBOM', (MyBOM, mp.MyParts), {})
+    mp.ms = ms
+    MS = type('MyBOM', (MyBOM, mp.MyParts, ms.MySearch), {})
     MS(XSCRIPTCONTEXT.getComponentContext()).execute()
 

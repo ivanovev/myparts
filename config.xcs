@@ -29,5 +29,41 @@
 				</info>
 			</prop>
 		</group>
+		<group oor:name="myparts">
+			<prop oor:name="x" oor:type="xs:int">
+				<info>
+					<desc>Window X</desc>
+				</info>
+			</prop>
+			<prop oor:name="y" oor:type="xs:int">
+				<info>
+					<desc>Window Y</desc>
+				</info>
+			</prop>
+		</group>
+		<group oor:name="mysort">
+			<prop oor:name="x" oor:type="xs:int">
+				<info>
+					<desc>Window X</desc>
+				</info>
+			</prop>
+			<prop oor:name="y" oor:type="xs:int">
+				<info>
+					<desc>Window Y</desc>
+				</info>
+			</prop>
+		</group>
+		<group oor:name="mybom">
+			<prop oor:name="x" oor:type="xs:int">
+				<info>
+					<desc>Window X</desc>
+				</info>
+			</prop>
+			<prop oor:name="y" oor:type="xs:int">
+				<info>
+					<desc>Window Y</desc>
+				</info>
+			</prop>
+		</group>
 	</component>
 </oor:component-schema>

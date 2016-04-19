@@ -18,4 +18,28 @@
 			<value>300</value>
 		</prop>
 	</node>
+	<node oor:name="myparts">
+		<prop oor:name="x">
+			<value>200</value>
+		</prop>
+		<prop oor:name="y">
+			<value>200</value>
+		</prop>
+	</node>
+	<node oor:name="mysort">
+		<prop oor:name="x">
+			<value>200</value>
+		</prop>
+		<prop oor:name="y">
+			<value>200</value>
+		</prop>
+	</node>
+	<node oor:name="mybom">
+		<prop oor:name="x">
+			<value>200</value>
+		</prop>
+		<prop oor:name="y">
+			<value>200</value>
+		</prop>
+	</node>
 </oor:component-data>
