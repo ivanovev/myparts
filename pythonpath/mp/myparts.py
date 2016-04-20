@@ -99,6 +99,8 @@ class MyParts(object):
         ms.MySearch.__init__(self, ctx, title=title)
         if title != 'MyParts':
             return
+        if self.get_sheet().Name == 'Labels':
+            return
         if not self.init_data():
             self.part_dlg_combo_upd_cb(self.cc[0])
 
@@ -476,10 +478,10 @@ class MyParts(object):
         return cell
 
     def init_labels(self):
-        shtn = self.get_sheet_names()
         labels = 'Labels'
+        shtn = self.get_sheet_names(skip=[])
         if labels not in shtn:
-            self.doc.Sheets.insertNewByName(labels, len(shtn))
+            self.doc.getSheets().insertNewByName(labels, len(shtn))
         else:
             return
 
@@ -512,7 +514,8 @@ class MyParts(object):
             return text
 
     def add_label(self, index=None):
-        sht1 = self.doc.Sheets.getByName('Labels')
+        sht1 = self.get_sheet('Labels')
+        index = None
         for i in range(0, 21):
             row = 7*int(i / 3)
             col = 3*int(i % 3)
