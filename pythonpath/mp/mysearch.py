@@ -15,6 +15,7 @@ from collections import OrderedDict as OD
 
 PART_ATTR_LIST = ['Device', 'Value', 'Footprint', 'Quantity', 'Note1', 'Note2']
 PART_ATTR_LEN = len(PART_ATTR_LIST)
+PART_ATTR_N = 3
 
 def out(obj, name='out'):
     f = open('/tmp/'+name, 'w')
@@ -283,10 +284,15 @@ class MySearch(object):
             s = cell.getString()
             if s:
                 p.append(s)
-            elif len(p) and col <= PART_ATTR_LEN:
-                p.append('')
-            else:
-                break
+                continue
+            if len(p):
+                if col <= PART_ATTR_N:
+                    p = []
+                    break
+                if col <= PART_ATTR_LEN:
+                    p.append('')
+                    continue
+            break
         return p
 
     def set_part(self, sht, row, p, psz):

@@ -55,8 +55,8 @@ class MySort(object):
 
     def init_rows(self, dlg):
         model = dlg.getModel()
-        for i in range(0, mp.PART_ATTR_N):
-            self.init_row(dlg, i*model.Height/(mp.PART_ATTR_N+1), i)
+        for i in range(0, ms.PART_ATTR_N):
+            self.init_row(dlg, i*model.Height/(ms.PART_ATTR_N+1), i)
 
     def key_upd_cb(self, index):
         cc = self.cc[index]

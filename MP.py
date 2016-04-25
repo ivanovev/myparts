@@ -9,20 +9,18 @@ class MP(unohelper.Base, XJobExecutor):
     def trigger(self, *args):
         import mp
         a = list(args)
+        mp.myparts.ms = mp.mysearch
         if a[0] == 'myparts':
-            mp.myparts.ms = mp.mysearch
             MP = type('MyParts', (mp.myparts.MyParts, mp.mysearch.MySearch), {})
             MP(self.ctx).execute()
         elif a[0] == 'mysort':
             mp.mysort.mp = mp.myparts
             mp.mysort.ms = mp.mysearch
-            mp.myparts.ms = mp.mysearch
             MS = type('MySort', (mp.mysort.MySort, mp.myparts.MyParts, mp.mysearch.MySearch), {})
             MS(self.ctx).execute()
         elif a[0] == 'mybom':
             mp.mybom.mp = mp.myparts
             mp.mybom.ms = mp.mysearch
-            mp.myparts.ms = mp.mysearch
             MB = type('MyBOM', (mp.mybom.MyBOM, mp.myparts.MyParts, mp.mysearch.MySearch), {})
             MB(self.ctx).execute()
 

@@ -27,8 +27,6 @@ PART_ATTR_DFLT = [
     ''
 ]
 
-PART_ATTR_N = 3
-
 class ButtonListener(Base, XActionListener):
     def __init__(self, cb):
         self.cb = cb
@@ -63,26 +61,26 @@ class MenuListener(Base, XMenuListener):
 def part_add_del_dec(f):
     def tmp(*args, **kwargs):
         mp = args[0]
-        if not mp.ll[PART_ATTR_N].getState():
+        if not mp.ll[ms.PART_ATTR_N].getState():
             return
         part = [a.Text for a in mp.cc]
-        pn = part[PART_ATTR_N]
-        part[PART_ATTR_N] = ''
+        pn = part[ms.PART_ATTR_N]
+        part[ms.PART_ATTR_N] = ''
         index = mp.get_selection()
         if index == None:
             mp.part_find_cb()
-            mp.cc[PART_ATTR_N].setText(pn)
+            mp.cc[ms.PART_ATTR_N].setText(pn)
             return
         sht = mp.get_sheet()
         if not mp.part_cmp(sht, index, part):
             mp.part_find_cb()
-            mp.cc[PART_ATTR_N].setText(pn)
+            mp.cc[ms.PART_ATTR_N].setText(pn)
             return
         p1 = mp.get_part(sht, index)
         if ''.join(p1) == '' and index > 0:
             if mp.part_find(sht, part, 0) != index:
                 mp.part_find_cb()
-                mp.cc[PART_ATTR_N].setText(pn)
+                mp.cc[ms.PART_ATTR_N].setText(pn)
                 return
         return f(*args, **kwargs)
     return tmp
@@ -295,7 +293,7 @@ class MyParts(object):
         sht = self.get_sheet()
         part1 = self.get_mypart()
         checks = [l.getState() for l in self.ll]
-        part1[PART_ATTR_N] = ''
+        part1[ms.PART_ATTR_N] = ''
         index = self.get_selection()
         if index != None:
             part = self.get_part(sht, index)
@@ -361,7 +359,7 @@ class MyParts(object):
 
     def part_eq(self):
         part = [a.Text for a in self.cc]
-        part[PART_ATTR_N] = ''
+        part[ms.PART_ATTR_N] = ''
         index = self.get_selection()
         if index == None:
             return False
@@ -378,19 +376,19 @@ class MyParts(object):
     def part_add(self, sht, index=None):
         part = [a.Text for a in self.cc]
         if index == None:
-            qty = part[PART_ATTR_N]
-            part[PART_ATTR_N] = ''
+            qty = part[ms.PART_ATTR_N]
+            part[ms.PART_ATTR_N] = ''
             index = self.part_find(sht, part, 0)
-            part[PART_ATTR_N] = qty
+            part[ms.PART_ATTR_N] = qty
         part1 = self.get_part(sht, index)
         if not part1:
             for i in range(0, ms.PART_ATTR_LEN):
                 cell = sht.getCellByPosition(i, index)
                 cell.setString(part[i])
         else:
-            cell = sht.getCellByPosition(PART_ATTR_N, index)
+            cell = sht.getCellByPosition(ms.PART_ATTR_N, index)
             qty = int(cell.getString())
-            qty += int(part[PART_ATTR_N])
+            qty += int(part[ms.PART_ATTR_N])
             cell.setString('%d' % qty)
 
     @part_add_del_dec
@@ -401,7 +399,7 @@ class MyParts(object):
         if not p1:
             return
         part = [a.Text for a in self.cc]
-        self.part_del(sht, index, int(part[PART_ATTR_N]))
+        self.part_del(sht, index, int(part[ms.PART_ATTR_N]))
         if not self.init_data():
             self.part_dlg_combo_upd_cb(self.cc[0])
 
@@ -409,9 +407,9 @@ class MyParts(object):
         if sht == None:
             sht = self.get_sheet()
         part1 = self.get_part(sht, index)
-        qty1 = int(part1[PART_ATTR_N])
+        qty1 = int(part1[ms.PART_ATTR_N])
         if qty < qty1:
-            cell = sht.getCellByPosition(PART_ATTR_N, index)
+            cell = sht.getCellByPosition(ms.PART_ATTR_N, index)
             cell.setString('%d' % (qty1 - qty))
         else:
             index1 = self.get_sheet_names().index(sht.Name)
@@ -452,9 +450,9 @@ class MyParts(object):
         sht1 = self.doc.Sheets.getByName(shtn[menuid-1])
         index = self.get_selection()
         part = self.get_part(sht, index)
-        qty = int(part[PART_ATTR_N])
+        qty = int(part[ms.PART_ATTR_N])
         part1 = [a.Text for a in self.cc]
-        qty1 = int(part1[PART_ATTR_N])
+        qty1 = int(part1[ms.PART_ATTR_N])
         self.part_del(sht, index, qty1)
         self.part_add(sht1)
 
@@ -505,12 +503,12 @@ class MyParts(object):
         if col == 1:
             text = self.cc[i].Text
             if i == 3:
-                text = self.cc[PART_ATTR_N + 1].Text
-                note2 = self.cc[PART_ATTR_N + 2].Text
+                text = self.cc[ms.PART_ATTR_N + 1].Text
+                note2 = self.cc[ms.PART_ATTR_N + 2].Text
                 if note2:
                     text += '   ' + note2
             if i == 4:
-                text = self.cc[PART_ATTR_N].Text
+                text = self.cc[ms.PART_ATTR_N].Text
             return text
 
     def add_label(self, index=None):
@@ -541,9 +539,9 @@ class MyParts(object):
         row = 7*int(index / 3)
         col = 3*int(index % 3)
         rr = False
-        if sht1.Rows.getByIndex(row).Height == sht1.Rows.getByIndex(row + PART_ATTR_N + 2).Height:
+        if sht1.Rows.getByIndex(row).Height == sht1.Rows.getByIndex(row + ms.PART_ATTR_N + 2).Height:
             rr = True
-        for i in range(0, PART_ATTR_N+2):
+        for i in range(0, ms.PART_ATTR_N+2):
             if col == 0 and rr:
                 sht1.Rows.getByIndex(row + i).Height *= 1.25
                 if i == 0 and row:
@@ -555,12 +553,12 @@ class MyParts(object):
             cell = self.cell_border(cell)
             cell.HoriJustify = HJ_CENTER
             cell.setString(self.format_label_text(i, 1))
-        cell = sht1.getCellByPosition(col, row+PART_ATTR_N+2)
+        cell = sht1.getCellByPosition(col, row+ms.PART_ATTR_N+2)
         cell = self.cell_border(cell)
         cell.CharHeight = 8
         if row or col:
             cell.Formula = "=A6"
-        cell = sht1.getCellByPosition(col + 1, row+PART_ATTR_N+2)
+        cell = sht1.getCellByPosition(col + 1, row+ms.PART_ATTR_N+2)
         cell = self.cell_border(cell)
         cell.CharHeight = 8
         if row or col:

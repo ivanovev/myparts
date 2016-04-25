@@ -109,9 +109,9 @@ class MyBOM(object):
             part = self.get_part(sht, partn)
             if not part:
                 break
-            if len(part) < mp.PART_ATTR_N:
+            if len(part) < ms.PART_ATTR_N:
                 break
-            part = part[0:mp.PART_ATTR_N]
+            part = part[0:ms.PART_ATTR_N]
             pv = part[1]
             pvv = pv.split('/')
             if len(pvv) > 1:
@@ -130,7 +130,7 @@ class MyBOM(object):
                 if not part2:
                     index = 0
                     continue
-                qty1 = int(part2[mp.PART_ATTR_N])
+                qty1 = int(part2[ms.PART_ATTR_N])
                 qty += qty1
                 if sht1.Name not in qtyd:
                     qtyd[sht1.Name] = qty1
@@ -139,7 +139,7 @@ class MyBOM(object):
                 index += 1
             cell = sht.getCellByPosition(ms.PART_ATTR_LEN, partn)
             part = self.get_part(sht, partn)
-            qtyn = int(self.cc[0].Text)*int(part[mp.PART_ATTR_N])
+            qtyn = int(self.cc[0].Text)*int(part[ms.PART_ATTR_N])
             if qty < qtyn:
                 cell.setString('NO')
                 cell.CharColor = 0xAA0000
