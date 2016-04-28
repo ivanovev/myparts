@@ -1,5 +1,5 @@
 
-from com.sun.star.awt import XActionListener, XMouseListener, XMenuListener, XTextListener, Rectangle
+from com.sun.star.awt import XActionListener, XKeyListener, XMouseListener, XMenuListener, XTextListener, Rectangle
 from com.sun.star.awt.MouseButton import RIGHT
 from com.sun.star.awt.PopupMenuDirection import EXECUTE_DEFAULT
 from com.sun.star.awt.PosSize import POS
@@ -37,6 +37,12 @@ class LabelListener(Base, XMouseListener):
     def __init__(self, cb):
         self.cb = cb
     def mouseReleased(self, evt):
+        self.cb(evt)
+
+class UpDownListener(Base, XKeyListener):
+    def __init__(self, cb):
+        self.cb = cb
+    def keyPressed(self, evt):
         self.cb(evt)
 
 class ComboboxListener(Base, XMouseListener):
@@ -122,7 +128,25 @@ class MyParts(object):
         listener = ms.DisposeListener(self.config_write)
         dlg.addEventListener(listener)
 
+        listener = UpDownListener(self.up_down_cb)
+        dlg.addKeyListener(listener)
+
         self.dlg = dlg
+
+    def up_down_cb(self, evt):
+        index = self.get_selection()
+        mod = evt.value.Modifiers
+        code = evt.value.KeyCode
+        if mod == 2 and code == 0x401:
+            if index > 0:
+                self.set_selection(index - 1)
+        if mod == 2 and code == 0x400:
+            p = self.get_part(None, index)
+            if p:
+                self.set_selection(index + 1)
+        #self.msgbox('%d' % evt.value.Modifiers)
+        #self.msgbox('%d %d %d %d' % (evt.value.KeyCode, evt.value.KeyChar, evt.value.KeyFunc, evt.value.Modifiers))
+        #ms.out(evt.value, 'evt')
 
     def init_row(self, dlg, posy, label, itemlist):
         model = dlg.getModel()
@@ -455,6 +479,8 @@ class MyParts(object):
         qty1 = int(part1[ms.PART_ATTR_N])
         self.part_del(sht, index, qty1)
         self.part_add(sht1)
+        if not self.init_data():
+            self.part_dlg_combo_upd_cb(self.cc[0])
 
     def add_label_cb(self):
         self.init_labels()

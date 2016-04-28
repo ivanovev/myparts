@@ -277,23 +277,13 @@ class MySearch(object):
         if not sht:
             sht = self.get_sheet()
         p = []
-        col = 0
-        while True:
+        for col in range(0, PART_ATTR_LEN):
             cell = sht.getCellByPosition(col, row)
-            col = col + 1
             s = cell.getString()
-            if s:
-                p.append(s)
-                continue
-            if len(p):
-                if col <= PART_ATTR_N:
-                    p = []
-                    break
-                if col <= PART_ATTR_LEN:
-                    p.append('')
-                    continue
-            break
-        return p
+            p.append(s)
+        if p[0] and p[PART_ATTR_N]:
+            return p
+        return []
 
     def set_part(self, sht, row, p, psz):
         if not sht:
