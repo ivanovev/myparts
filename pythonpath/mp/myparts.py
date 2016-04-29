@@ -39,7 +39,7 @@ class LabelListener(Base, XMouseListener):
     def mouseReleased(self, evt):
         self.cb(evt)
 
-class UpDownHandler(Base, XKeyHandler):
+class UpDownListener(Base, XKeyListener):
     def __init__(self, cb):
         self.cb = cb
     def keyPressed(self, evt):
@@ -66,27 +66,27 @@ class MenuListener(Base, XMenuListener):
 
 def part_add_del_dec(f):
     def tmp(*args, **kwargs):
-        mp = args[0]
-        if not mp.ll[ms.PART_ATTR_N].getState():
+        mp1 = args[0]
+        if not mp1.ll[ms.PART_ATTR_N].getState():
             return
-        part = [a.Text for a in mp.cc]
+        part = [a.Text for a in mp1.cc]
         pn = part[ms.PART_ATTR_N]
         part[ms.PART_ATTR_N] = ''
-        index = mp.get_selection()
+        index = mp1.get_selection()
         if index == None:
-            mp.part_find_cb()
-            mp.cc[ms.PART_ATTR_N].setText(pn)
+            mp1.part_find_cb()
+            mp1.cc[ms.PART_ATTR_N].setText(pn)
             return
-        sht = mp.get_sheet()
-        if not mp.part_cmp(sht, index, part):
-            mp.part_find_cb()
-            mp.cc[ms.PART_ATTR_N].setText(pn)
+        sht = mp1.get_sheet()
+        if not mp1.part_cmp(sht, index, part):
+            mp1.part_find_cb()
+            mp1.cc[ms.PART_ATTR_N].setText(pn)
             return
-        p1 = mp.get_part(sht, index)
+        p1 = mp1.get_part(sht, index)
         if ''.join(p1) == '' and index > 0:
-            if mp.part_find(sht, part, 0) != index:
-                mp.part_find_cb()
-                mp.cc[ms.PART_ATTR_N].setText(pn)
+            if mp1.part_find(sht, part, 0) != index:
+                mp1.part_find_cb()
+                mp1.cc[ms.PART_ATTR_N].setText(pn)
                 return
         return f(*args, **kwargs)
     return tmp
@@ -113,14 +113,19 @@ class MyParts(object):
         model.Width = self.w
         model.Height = self.h
         model.Title = self.title
+        ms.out(model, 'model')
+
+        self.udlistener = UpDownListener(self.up_down_cb)
 
         dlg = self.createUnoService('com.sun.star.awt.UnoControlDialog')
         dlg.setPosSize(self.x, self.y, 0, 0, POS)
         dlg.setModel(model)
         toolkit = self.createUnoService('com.sun.star.awt.Toolkit')
         dlg.createPeer(toolkit, None)
+
         self.init_rows(dlg)
         self.init_buttons(dlg)
+        ms.out(dlg, 'dlg')
 
         listener = ms.PositionListener(self.move_cb, self.resize_cb)
         dlg.addWindowListener(listener)
@@ -128,10 +133,10 @@ class MyParts(object):
         listener = ms.DisposeListener(self.config_write)
         dlg.addEventListener(listener)
 
-        #listener = UpDownListener(self.up_down_cb)
-        #dlg.addKeyListener(listener)
-        self.handler = UpDownHandler(self.up_down_cb)
-        self.ctrl.addKeyHandler(self.handler)
+        dlg.addKeyListener(self.udlistener)
+
+        #self.handler = UpDownHandler(self.up_down_cb)
+        #self.ctrl.addKeyHandler(self.handler)
         #ms.out(dlg, 'dlg')
 
         self.dlg = dlg
@@ -140,16 +145,20 @@ class MyParts(object):
         index = self.get_selection()
         mod = evt.value.Modifiers
         code = evt.value.KeyCode
-        if mod == 2 and code == 0x401:
+        if mod == 2 and code == 0x20F:
             if index > 0:
-                self.set_selection(index - 1)
-        if mod == 2 and code == 0x400:
+                index -= 1
+        if mod == 2 and code == 0x20D:
             p = self.get_part(None, index)
             if p:
-                self.set_selection(index + 1)
-        #self.msgbox('%d' % evt.value.Modifiers)
-        #self.msgbox('%d %d %d %d' % (evt.value.KeyCode, evt.value.KeyChar, evt.value.KeyFunc, evt.value.Modifiers))
-        #ms.out(evt.value, 'evt')
+                index += 1
+            else:
+                index = None
+        if index != None:
+            self.set_selection(index)
+        p = self.get_part(None, index)
+        if p:
+            self.set_mypart(p)
 
     def init_row(self, dlg, posy, label, itemlist):
         model = dlg.getModel()
@@ -184,6 +193,8 @@ class MyParts(object):
             label = ms.PART_ATTR_LIST[i]
             items = PART_ATTR_ITEMS[i]
             l,w = self.init_row(dlg, i*model.Height/(ms.PART_ATTR_LEN + 2), label, items)
+            l.addKeyListener(self.udlistener)
+            w.addKeyListener(self.udlistener)
             l.setState(1)
             w.Text = PART_ATTR_DFLT[i]
             listener = LabelListener(self.part_dlg_label_upd_cb)
@@ -193,6 +204,8 @@ class MyParts(object):
             if i == 0:
                 listener = ComboboxListener2(self.part_dlg_combo_upd_cb2)
                 w.addTextListener(listener)
+                ms.out(l, 'l')
+                ms.out(w, 'w')
 
     def init_button(self, dlg, posx, rown, label):
         model = dlg.getModel()
@@ -204,6 +217,7 @@ class MyParts(object):
         btnmodel.PositionY = model.Height - (2-rown)*btnmodel.Height
         btnmodel.Label = label
         btnmodel.PushButtonType = STANDARD
+        btnmodel.FocusOnClick = 0
         model.insertByName(label, btnmodel)
         return dlg.getControl(label)
 
@@ -347,7 +361,6 @@ class MyParts(object):
         self.search.execute()
 
     def close_cb(self):
-        self.ctrl.removeKeyHandler(self.handler)
         if hasattr(self, 'search'):
             self.search.close_cb()
         self.dlg.endExecute()
