@@ -1,5 +1,5 @@
 
-from com.sun.star.awt import XActionListener, XKeyListener, XMouseListener, XMenuListener, XTextListener, Rectangle
+from com.sun.star.awt import XActionListener, XKeyListener, XKeyHandler, XMouseListener, XMenuListener, XTextListener, Rectangle
 from com.sun.star.awt.MouseButton import RIGHT
 from com.sun.star.awt.PopupMenuDirection import EXECUTE_DEFAULT
 from com.sun.star.awt.PosSize import POS
@@ -39,7 +39,7 @@ class LabelListener(Base, XMouseListener):
     def mouseReleased(self, evt):
         self.cb(evt)
 
-class UpDownListener(Base, XKeyListener):
+class UpDownHandler(Base, XKeyHandler):
     def __init__(self, cb):
         self.cb = cb
     def keyPressed(self, evt):
@@ -128,8 +128,11 @@ class MyParts(object):
         listener = ms.DisposeListener(self.config_write)
         dlg.addEventListener(listener)
 
-        listener = UpDownListener(self.up_down_cb)
-        dlg.addKeyListener(listener)
+        #listener = UpDownListener(self.up_down_cb)
+        #dlg.addKeyListener(listener)
+        self.handler = UpDownHandler(self.up_down_cb)
+        self.ctrl.addKeyHandler(self.handler)
+        #ms.out(dlg, 'dlg')
 
         self.dlg = dlg
 
@@ -344,7 +347,7 @@ class MyParts(object):
         self.search.execute()
 
     def close_cb(self):
-        self.config_write()
+        self.ctrl.removeKeyHandler(self.handler)
         if hasattr(self, 'search'):
             self.search.close_cb()
         self.dlg.endExecute()
