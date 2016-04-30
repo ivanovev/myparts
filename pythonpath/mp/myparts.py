@@ -145,20 +145,36 @@ class MyParts(object):
         index = self.get_selection()
         mod = evt.value.Modifiers
         code = evt.value.KeyCode
-        if mod == 2 and code == 0x20F:
-            if index > 0:
+        if mod != 2:
+            return
+        if code in [0x209, 0x20A]:
+            if code == 0x20A:
+                if index > 0:
+                    index -= 1
+            if code == 0x209:
+                p = self.get_part(None, index)
+                if p:
+                    index += 1
+                else:
+                    index = None
+        if code in [0x207, 0x20B]:
+            sht = self.get_sheet()
+            name = sht.getName()
+            shtn = self.get_sheet_names(skip=[])
+            index = shtn.index(name)
+            if code == 0x207 and index > 0:
                 index -= 1
-        if mod == 2 and code == 0x20D:
-            p = self.get_part(None, index)
-            if p:
+            if code == 0x20B and index < (len(shtn) - 1):
                 index += 1
-            else:
-                index = None
+            name1 = shtn[index]
+            sht1 = self.get_sheet(name1)
+            self.ctrl.setActiveSheet(sht1)
+            index = 0
         if index != None:
             self.set_selection(index)
-        p = self.get_part(None, index)
-        if p:
-            self.set_mypart(p)
+            p = self.get_part(None, index)
+            if p:
+                self.set_mypart(p)
 
     def init_row(self, dlg, posy, label, itemlist):
         model = dlg.getModel()
@@ -439,9 +455,9 @@ class MyParts(object):
         if not p1:
             return
         part = [a.Text for a in self.cc]
-        self.part_del(sht, index, int(part[ms.PART_ATTR_N]))
-        if not self.init_data():
-            self.part_dlg_combo_upd_cb(self.cc[0])
+        if not self.part_del(sht, index, int(part[ms.PART_ATTR_N])):
+            if not self.init_data():
+                self.part_dlg_combo_upd_cb(self.cc[0])
 
     def part_del(self, sht, index, qty):
         if sht == None:
@@ -451,6 +467,7 @@ class MyParts(object):
         if qty < qty1:
             cell = sht.getCellByPosition(ms.PART_ATTR_N, index)
             cell.setString('%d' % (qty1 - qty))
+            return True
         else:
             index1 = self.get_sheet_names().index(sht.Name)
             sel = self.doc.CurrentController.getSelection()
@@ -462,6 +479,7 @@ class MyParts(object):
             arange.EndColumn = area.EndColumn
             arange.EndRow = area.EndRow
             sht.removeRange(arange, UP)
+            return False
 
     def part_move_cb(self):
         if not self.part_eq():

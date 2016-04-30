@@ -274,8 +274,10 @@ class MySearch(object):
             self.wnd.setVisible(True)
 
     def get_part(self, sht, row):
-        if not sht:
+        if sht == None:
             sht = self.get_sheet()
+        if row == None:
+            row = self.get_selection()
         p = []
         for col in range(0, PART_ATTR_LEN):
             cell = sht.getCellByPosition(col, row)
@@ -287,7 +289,7 @@ class MySearch(object):
 
     def set_part(self, sht, row, p, psz):
         if not sht:
-            sht = self.get_active_sheet()
+            sht = self.get_sheet()
         for i in range(0, psz):
             cell = sht.getCellByPosition(i, row)
             if i < len(p):
