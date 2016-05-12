@@ -113,7 +113,6 @@ class MyParts(object):
         model.Width = self.w
         model.Height = self.h
         model.Title = self.title
-        ms.out(model, 'model')
 
         self.udlistener = UpDownListener(self.up_down_cb)
 
@@ -125,7 +124,6 @@ class MyParts(object):
 
         self.init_rows(dlg)
         self.init_buttons(dlg)
-        ms.out(dlg, 'dlg')
 
         listener = ms.PositionListener(self.move_cb, self.resize_cb)
         dlg.addWindowListener(listener)
@@ -134,10 +132,6 @@ class MyParts(object):
         dlg.addEventListener(listener)
 
         dlg.addKeyListener(self.udlistener)
-
-        #self.handler = UpDownHandler(self.up_down_cb)
-        #self.ctrl.addKeyHandler(self.handler)
-        #ms.out(dlg, 'dlg')
 
         self.dlg = dlg
 
@@ -220,8 +214,6 @@ class MyParts(object):
             if i == 0:
                 listener = ComboboxListener2(self.part_dlg_combo_upd_cb2)
                 w.addTextListener(listener)
-                ms.out(l, 'l')
-                ms.out(w, 'w')
 
     def init_button(self, dlg, posx, rown, label):
         model = dlg.getModel()
