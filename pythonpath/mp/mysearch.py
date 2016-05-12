@@ -79,7 +79,7 @@ class MySearch(object):
         self.result = OD()
         if part1:
             self.part_search(None, part1)
-        self.display_results()
+        self.display_results(part1)
         self.selection_cb = selection_cb
 
     def new_search(self, ctx, part1=[]):
@@ -92,6 +92,7 @@ class MySearch(object):
         desc = createUnoStruct("com.sun.star.awt.WindowDescriptor")
         frame = self.smgr.createInstanceWithContext('com.sun.star.frame.Frame', self.ctx)
         wnd = self.toolkit.createWindow(WindowDescriptor(SIMPLE, 'floatingwindow', self.parent, -1, rect, BORDER + SHOW + SIZEABLE + MOVEABLE + CLOSEABLE))
+        wnd.setVisible(False)
         frame.initialize(wnd)
         self.frame = frame
 
@@ -227,12 +228,27 @@ class MySearch(object):
         sel = sht.getCellRangeByPosition(0, index, PART_ATTR_LEN - 1, index)
         self.ctrl.select(sel)
 
-    def display_results(self):
+    def display_results(self, part1):
         root_node = self.tree_data.createNode("Results", True)
         self.tree_data.setRoot(root_node)
         n3 = None
         name1 = self.get_sheet().getName()
-        if not self.result:
+        if ''.join(part1):
+            if self.result:
+                for k1,v1 in self.result.items():
+                    n1 = self.tree_data.createNode(k1, False)
+                    root_node.appendChild(n1)
+                    for k2, v2 in v1.items():
+                        k3 = ' '.join(v2)
+                        k3 = '%d %s' % (k2+1, k3)
+                        n2 = self.tree_data.createNode(k3, False)
+                        n1.appendChild(n2)
+                    if k1 == name1:
+                        n3 = n1
+            else:
+                self.msgbox(str(part1) + ' not found')
+                delattr(self, 'wnd')
+        else:
             names = self.get_sheet_names(skip=[])
             for n in names:
                 n1 = self.tree_data.createNode(n, False)
@@ -250,17 +266,6 @@ class MySearch(object):
                     n2 = self.tree_data.createNode(k, False)
                     n1.appendChild(n2)
                     index = index + 1
-        else:
-            for k1,v1 in self.result.items():
-                n1 = self.tree_data.createNode(k1, False)
-                root_node.appendChild(n1)
-                for k2, v2 in v1.items():
-                    k3 = ' '.join(v2)
-                    k3 = '%d %s' % (k2+1, k3)
-                    n2 = self.tree_data.createNode(k3, False)
-                    n1.appendChild(n2)
-                if k1 == name1:
-                    n3 = n1
         self.tree.expandNode(root_node)
         self.root_node = root_node
         # next line must be called after tree populated
