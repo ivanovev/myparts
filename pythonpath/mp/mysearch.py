@@ -170,6 +170,8 @@ class MySearch(object):
     def part_cmp(self, sht, index, part):
         if sht == None:
             sht = self.get_sheet()
+        if index == None:
+            index = self.get_selection()
         if type(index) == int:
             part2 = self.get_part(sht, index)
         elif type(index) == list:
@@ -229,7 +231,7 @@ class MySearch(object):
         self.ctrl.select(sel)
 
     def display_results(self, part1):
-        root_node = self.tree_data.createNode("Results", True)
+        root_node = self.tree_data.createNode('Results', True)
         self.tree_data.setRoot(root_node)
         n3 = None
         name1 = self.get_sheet().getName()
@@ -243,7 +245,9 @@ class MySearch(object):
                         k3 = '%d %s' % (k2+1, k3)
                         n2 = self.tree_data.createNode(k3, False)
                         n1.appendChild(n2)
-                    if k1 == name1:
+                        if k1 == name1 and self.part_cmp(None, None, v2):
+                            n3 = n2
+                    if k1 == name1 and not n3:
                         n3 = n1
             else:
                 self.msgbox(str(part1) + ' not found')
@@ -272,7 +276,11 @@ class MySearch(object):
         self.tree_model.setPropertyValues(('SelectionType', 'RootDisplayed', 'ShowsHandles', 'ShowsRootHandles', 'Editable'), (SINGLE, False, False, False, False, False))
         if n3:
             self.tree.select(n3)
-            self.tree.expandNode(n3)
+            n2 = n3.getParent()
+            if n2 == root_node:
+                self.tree.expandNode(n3)
+            else:
+                self.tree.expandNode(n2)
 
     def execute(self):
         if hasattr(self, 'wnd'):
@@ -343,6 +351,14 @@ class MySearch(object):
                 self.w = config_reader.w
             if hasattr(config_reader, 'h'):
                 self.h = config_reader.h
+            if self.x <= 0:
+                self.x = 100
+            if self.y <= 0:
+                self.y = 100
+            if self.w >= 500:
+                self.w = 500
+            if self.h >= 500:
+                self.h = 500
         except:
             pass
 

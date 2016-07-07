@@ -3,7 +3,7 @@
 xmlns:d="http://openoffice.org/extensions/description/2006"
 xmlns:xlink="http://www.w3.org/1999/xlink">
  
-  <version value="2016-05-12" />
+  <version value="2016-07-07" />
  
   <identifier value="org.openoffice.Office.addon.myparts" />
   <platform value="all" />

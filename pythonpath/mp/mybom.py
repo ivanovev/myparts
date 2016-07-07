@@ -91,12 +91,10 @@ class MyBOM(object):
             part = self.get_part(sht, partn)
             if not part:
                 break
-            if len(part) > ms.PART_ATTR_LEN:
-                col = ms.PART_ATTR_LEN
-                while col <= len(part):
-                    cell = sht.getCellByPosition(col, partn)
-                    cell.clearContents(1023)
-                    col += 1
+            for col in range(ms.PART_ATTR_LEN, ms.PART_ATTR_LEN + 3):
+                cell = sht.getCellByPosition(col, partn)
+                cell.clearContents(1023)
+                col += 1
             partn += 1
         srcl = self.cc[-1]
         shts = srcl.SelectedItems
